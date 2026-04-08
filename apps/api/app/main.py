@@ -7,7 +7,7 @@ from fastapi.responses import FileResponse
 from app.config import settings
 from app.database import engine
 from app.models import Base
-from app.routers import devices, health, incidents, ingest, projects, seed
+from app.routers import auth, devices, health, incidents, ingest, projects, seed
 
 
 @asynccontextmanager
@@ -34,6 +34,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router, prefix="/api/v1")
 app.include_router(health.router, prefix="/api/v1")
 app.include_router(devices.router, prefix="/api/v1")
 app.include_router(incidents.router, prefix="/api/v1")

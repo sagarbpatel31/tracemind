@@ -12,6 +12,7 @@ from app.models.incident import Incident, IncidentStatus, Severity
 from app.models.telemetry import EventLog, LogLevel, MetricPoint
 from app.models.user import User
 from app.models.workspace import Project, Workspace
+from app.security import hash_password
 
 router = APIRouter(prefix="/seed", tags=["seed"])
 
@@ -43,7 +44,12 @@ async def seed_demo_data(db: AsyncSession = Depends(get_db)):
     base_time = now - timedelta(hours=1)
 
     # User
-    user = User(id=USER_ID, email="demo@tracemind.ai", name="Demo User")
+    user = User(
+        id=USER_ID,
+        email="demo@tracemind.ai",
+        name="Demo User",
+        password_hash=hash_password("demo123"),
+    )
     db.add(user)
 
     # Workspace

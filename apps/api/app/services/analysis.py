@@ -116,9 +116,66 @@ async def analyze_incident(incident_id: uuid.UUID, db: AsyncSession) -> dict:
         suggested_steps.append("Review node dependency graph for cascading failure paths")
         suggested_steps.append("Add restart policies and health checks to critical nodes")
 
-    # Rule 4: Error log spike
+    # Rule 4: Version regression — deployment/version keyword in events + latency increase
+    deployment_events = [
+        e for e in events
+        if any(kw in e.message.lower() for kw in ("deployment", "version", "config", "v2.", "v1.", "deploy"))
+    ]
+    regression_events = [
+        e for e in events
+        if any(kw in e.message.lower() for kw in ("regression", "abort", "missed", "baseline", "higher than"))
+    ]
+
+    if deployment_events and regression_events:
+        probable_causes.append({
+            "cause": "Version regression",
+            "confidence": 0.82,
+            "description": "A recent deployment introduced a configuration or behavior change "
+            "that degraded system performance. Event logs reference both a new deployment "
+            "and degraded behavior compared to the previous version.",
+        })
+        evidence.append({
+            "signal": "deployment_events",
+            "count": len(deployment_events),
+            "description": f"{len(deployment_events)} deployment/version-related events detected",
+        })
+        evidence.append({
+            "signal": "regression_events",
+            "count": len(regression_events),
+            "description": f"{len(regression_events)} events indicating degraded behavior vs baseline",
+        })
+        suggested_steps.append("Diff the configuration between the current and previous deployment versions")
+        suggested_steps.append("Roll back to the previous version and verify the issue resolves")
+        suggested_steps.append("Check for changed parameters (frequencies, thresholds, timeouts)")
+        suggested_steps.append("Add deployment-gated regression tests for critical metrics")
+
+    # Rule 5: Mission abort pattern
+    abort_events = [
+        e for e in events
+        if any(kw in e.message.lower() for kw in ("abort", "emergency stop", "e-stop", "mission fail"))
+    ]
+    if abort_events:
+        evidence.append({
+            "signal": "mission_abort",
+            "count": len(abort_events),
+            "description": f"{len(abort_events)} mission abort / emergency stop events",
+        })
+        if not any(c["cause"] == "Version regression" for c in probable_causes):
+            suggested_steps.append("Review mission parameters and abort trigger conditions")
+
+    # Rule 6: Inference latency degradation (without thermal cause)
+    if latency_values and max(latency_values) > 50 and not temp_values:
+        if max(latency_values) / (min(latency_values) + 0.01) > 2:
+            evidence.append({
+                "signal": "inference_latency_ms",
+                "peak": max(latency_values),
+                "baseline": min(latency_values),
+                "description": f"Inference latency degraded from {min(latency_values):.0f}ms to {max(latency_values):.0f}ms ({max(latency_values)/max(min(latency_values),1):.1f}x increase)",
+            })
+
+    # Rule 7: Error log spike
     error_events = [e for e in events if e.level.value in ("error", "fatal")]
-    if len(error_events) > 5:
+    if len(error_events) > 3:
         evidence.append({
             "signal": "error_logs",
             "count": len(error_events),
