@@ -1,0 +1,146 @@
+[
+  {
+    "id": "evt-003-01",
+    "incident_id": "inc-00300-0003-0003-0003-000000000003",
+    "device_id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+    "offset_seconds": 0,
+    "level": "info",
+    "source": "deployment_manager",
+    "message": "Deployment v2.4.0 activated on x86-warehouse-03"
+  },
+  {
+    "id": "evt-003-02",
+    "incident_id": "inc-00300-0003-0003-0003-000000000003",
+    "device_id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+    "offset_seconds": 3,
+    "level": "info",
+    "source": "nav2_planner",
+    "message": "Navigation planner initialized with costmap algorithm v2"
+  },
+  {
+    "id": "evt-003-03",
+    "incident_id": "inc-00300-0003-0003-0003-000000000003",
+    "device_id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+    "offset_seconds": 8,
+    "level": "info",
+    "source": "nav2_planner",
+    "message": "First path computation: 145ms (previous avg: 48ms)"
+  },
+  {
+    "id": "evt-003-04",
+    "incident_id": "inc-00300-0003-0003-0003-000000000003",
+    "device_id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+    "offset_seconds": 12,
+    "level": "warning",
+    "source": "nav2_planner",
+    "message": "Path computation time elevated: 152ms. 3.1x baseline."
+  },
+  {
+    "id": "evt-003-05",
+    "incident_id": "inc-00300-0003-0003-0003-000000000003",
+    "device_id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+    "offset_seconds": 16,
+    "level": "warning",
+    "source": "nav2_planner",
+    "message": "Replanning triggered: costmap inflation radius causing path invalidation"
+  },
+  {
+    "id": "evt-003-06",
+    "incident_id": "inc-00300-0003-0003-0003-000000000003",
+    "device_id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+    "offset_seconds": 20,
+    "level": "warning",
+    "source": "nav2_controller",
+    "message": "Frequent replanning detected: 4 replans in 12 seconds"
+  },
+  {
+    "id": "evt-003-07",
+    "incident_id": "inc-00300-0003-0003-0003-000000000003",
+    "device_id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+    "offset_seconds": 25,
+    "level": "warning",
+    "source": "tracemind_detector",
+    "message": "Anomaly detected: navigation planner performance degraded post-deployment"
+  },
+  {
+    "id": "evt-003-08",
+    "incident_id": "inc-00300-0003-0003-0003-000000000003",
+    "device_id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+    "offset_seconds": 28,
+    "level": "warning",
+    "source": "tracemind_detector",
+    "message": "INCIDENT CREATED: Navigation regression after v2.4.0 deployment [severity=medium]"
+  },
+  {
+    "id": "evt-003-09",
+    "incident_id": "inc-00300-0003-0003-0003-000000000003",
+    "device_id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+    "offset_seconds": 32,
+    "level": "error",
+    "source": "nav2_planner",
+    "message": "Goal timeout: path computation exceeded 200ms deadline"
+  },
+  {
+    "id": "evt-003-10",
+    "incident_id": "inc-00300-0003-0003-0003-000000000003",
+    "device_id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+    "offset_seconds": 36,
+    "level": "warning",
+    "source": "nav2_planner",
+    "message": "Costmap inflation radius: 1.2m (v2.3.1 used 0.55m). Possible misconfiguration."
+  },
+  {
+    "id": "evt-003-11",
+    "incident_id": "inc-00300-0003-0003-0003-000000000003",
+    "device_id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+    "offset_seconds": 40,
+    "level": "error",
+    "source": "nav2_controller",
+    "message": "Robot stopped: no valid path available within timeout"
+  },
+  {
+    "id": "evt-003-12",
+    "incident_id": "inc-00300-0003-0003-0003-000000000003",
+    "device_id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+    "offset_seconds": 45,
+    "level": "info",
+    "source": "nav2_planner",
+    "message": "Recovery behavior activated: clearing costmap and retrying"
+  },
+  {
+    "id": "evt-003-13",
+    "incident_id": "inc-00300-0003-0003-0003-000000000003",
+    "device_id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+    "offset_seconds": 49,
+    "level": "info",
+    "source": "nav2_planner",
+    "message": "Path found after costmap clear: 168ms computation time"
+  },
+  {
+    "id": "evt-003-14",
+    "incident_id": "inc-00300-0003-0003-0003-000000000003",
+    "device_id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+    "offset_seconds": 54,
+    "level": "warning",
+    "source": "tracemind_detector",
+    "message": "Correlation found: performance regression correlates with deployment d5555555"
+  },
+  {
+    "id": "evt-003-15",
+    "incident_id": "inc-00300-0003-0003-0003-000000000003",
+    "device_id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+    "offset_seconds": 58,
+    "level": "warning",
+    "source": "tracemind_detector",
+    "message": "Recommendation: Consider rollback to v2.3.1 or adjust inflation_radius parameter"
+  },
+  {
+    "id": "evt-003-16",
+    "incident_id": "inc-00300-0003-0003-0003-000000000003",
+    "device_id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+    "offset_seconds": 60,
+    "level": "info",
+    "source": "system_monitor",
+    "message": "System resources normal. Regression is algorithmic, not resource-related."
+  }
+]

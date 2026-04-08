@@ -1,0 +1,21 @@
+{
+  "id": "inc-00300-0003-0003-0003-000000000003",
+  "project_id": "11111111-1111-1111-1111-111111111111",
+  "device_id": "cccccccc-cccc-cccc-cccc-cccccccccccc",
+  "deployment_id": "d5555555-d555-d555-d555-d55555555555",
+  "title": "Navigation regression after v2.4.0 deployment",
+  "description": "Following the deployment of v2.4.0 on x86-warehouse-03, the navigation planner began producing suboptimal paths with increased replanning frequency. Path computation time increased by 3x compared to the previous v2.3.1 deployment, causing intermittent goal timeouts.",
+  "severity": "medium",
+  "status": "investigating",
+  "duration_seconds": 60,
+  "root_cause": "New costmap algorithm in v2.4.0 has a performance regression on large warehouse maps. The inflation radius calculation was changed, causing excessive obstacle dilation.",
+  "labels": {
+    "category": "version-regression",
+    "subsystem": "navigation",
+    "auto_detected": false,
+    "deployment_version": "2.4.0",
+    "previous_version": "2.3.1"
+  },
+  "created_at_offset_seconds": -1800,
+  "resolved_at_offset_seconds": null
+}

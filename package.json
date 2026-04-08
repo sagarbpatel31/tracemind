@@ -1,0 +1,8 @@
+{
+  "name": "tracemind",
+  "private": true,
+  "workspaces": [
+    "apps/web",
+    "packages/*"
+  ]
+}

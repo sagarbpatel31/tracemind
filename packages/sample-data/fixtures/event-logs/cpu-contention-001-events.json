@@ -1,0 +1,173 @@
+[
+  {
+    "id": "evt-001-01",
+    "incident_id": "inc-00100-0001-0001-0001-000000000001",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 0,
+    "level": "info",
+    "source": "system_monitor",
+    "message": "CPU utilization at 45%, all systems nominal"
+  },
+  {
+    "id": "evt-001-02",
+    "incident_id": "inc-00100-0001-0001-0001-000000000001",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 5,
+    "level": "info",
+    "source": "inference_node",
+    "message": "Starting batch inference job: model=yolov8-nav, batch_size=16"
+  },
+  {
+    "id": "evt-001-03",
+    "incident_id": "inc-00100-0001-0001-0001-000000000001",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 10,
+    "level": "info",
+    "source": "system_monitor",
+    "message": "CPU utilization rising: 58%"
+  },
+  {
+    "id": "evt-001-04",
+    "incident_id": "inc-00100-0001-0001-0001-000000000001",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 18,
+    "level": "warning",
+    "source": "system_monitor",
+    "message": "CPU utilization high: 72%. Threshold 70% exceeded."
+  },
+  {
+    "id": "evt-001-05",
+    "incident_id": "inc-00100-0001-0001-0001-000000000001",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 22,
+    "level": "warning",
+    "source": "topic_monitor",
+    "message": "/cmd_vel publish rate degraded: 8.1Hz (expected 10Hz)"
+  },
+  {
+    "id": "evt-001-06",
+    "incident_id": "inc-00100-0001-0001-0001-000000000001",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 28,
+    "level": "warning",
+    "source": "system_monitor",
+    "message": "CPU utilization: 81%. Multiple cores saturated."
+  },
+  {
+    "id": "evt-001-07",
+    "incident_id": "inc-00100-0001-0001-0001-000000000001",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 33,
+    "level": "error",
+    "source": "topic_monitor",
+    "message": "/cmd_vel publish rate critical: 5.2Hz (expected 10Hz)"
+  },
+  {
+    "id": "evt-001-08",
+    "incident_id": "inc-00100-0001-0001-0001-000000000001",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 35,
+    "level": "error",
+    "source": "tracemind_detector",
+    "message": "INCIDENT CREATED: CPU contention causing /cmd_vel topic degradation [severity=high]"
+  },
+  {
+    "id": "evt-001-09",
+    "incident_id": "inc-00100-0001-0001-0001-000000000001",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 40,
+    "level": "error",
+    "source": "system_monitor",
+    "message": "CPU utilization critical: 91%"
+  },
+  {
+    "id": "evt-001-10",
+    "incident_id": "inc-00100-0001-0001-0001-000000000001",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 45,
+    "level": "error",
+    "source": "inference_node",
+    "message": "Inference latency spike: 142ms (baseline 35ms)"
+  },
+  {
+    "id": "evt-001-11",
+    "incident_id": "inc-00100-0001-0001-0001-000000000001",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 50,
+    "level": "error",
+    "source": "topic_monitor",
+    "message": "/cmd_vel publish rate severely degraded: 2.8Hz"
+  },
+  {
+    "id": "evt-001-12",
+    "incident_id": "inc-00100-0001-0001-0001-000000000001",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 55,
+    "level": "error",
+    "source": "system_monitor",
+    "message": "CPU utilization peak: 98%. System under severe load."
+  },
+  {
+    "id": "evt-001-13",
+    "incident_id": "inc-00100-0001-0001-0001-000000000001",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 60,
+    "level": "error",
+    "source": "nav2_controller",
+    "message": "Controller frequency below minimum: 2.1Hz. Robot safety stop engaged."
+  },
+  {
+    "id": "evt-001-14",
+    "incident_id": "inc-00100-0001-0001-0001-000000000001",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 68,
+    "level": "warning",
+    "source": "inference_node",
+    "message": "Batch inference job completing, releasing CPU resources"
+  },
+  {
+    "id": "evt-001-15",
+    "incident_id": "inc-00100-0001-0001-0001-000000000001",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 72,
+    "level": "info",
+    "source": "system_monitor",
+    "message": "CPU utilization decreasing: 74%"
+  },
+  {
+    "id": "evt-001-16",
+    "incident_id": "inc-00100-0001-0001-0001-000000000001",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 78,
+    "level": "info",
+    "source": "topic_monitor",
+    "message": "/cmd_vel publish rate recovering: 7.4Hz"
+  },
+  {
+    "id": "evt-001-17",
+    "incident_id": "inc-00100-0001-0001-0001-000000000001",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 83,
+    "level": "info",
+    "source": "system_monitor",
+    "message": "CPU utilization stabilizing: 52%"
+  },
+  {
+    "id": "evt-001-18",
+    "incident_id": "inc-00100-0001-0001-0001-000000000001",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 87,
+    "level": "info",
+    "source": "topic_monitor",
+    "message": "/cmd_vel publish rate nominal: 9.8Hz"
+  },
+  {
+    "id": "evt-001-19",
+    "incident_id": "inc-00100-0001-0001-0001-000000000001",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 90,
+    "level": "info",
+    "source": "tracemind_detector",
+    "message": "INCIDENT RESOLVED: CPU contention causing /cmd_vel topic degradation. Duration: 90s."
+  }
+]

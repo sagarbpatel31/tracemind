@@ -1,0 +1,151 @@
+import uuid
+from datetime import timedelta
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models.telemetry import EventLog, MetricPoint
+
+
+async def analyze_incident(incident_id: uuid.UUID, db: AsyncSession) -> dict:
+    """Rules-based root cause analysis for an incident.
+
+    Analyzes metric patterns and event logs to determine probable causes.
+    Start rules-based, not fully agentic — add LLM summarization later.
+    """
+    # Fetch metrics for this incident
+    metrics_result = await db.execute(
+        select(MetricPoint)
+        .where(MetricPoint.incident_id == incident_id)
+        .order_by(MetricPoint.timestamp)
+    )
+    metrics = metrics_result.scalars().all()
+
+    # Fetch events for this incident
+    events_result = await db.execute(
+        select(EventLog)
+        .where(EventLog.incident_id == incident_id)
+        .order_by(EventLog.timestamp)
+    )
+    events = events_result.scalars().all()
+
+    # Build metric summaries
+    metric_map: dict[str, list[float]] = {}
+    for m in metrics:
+        metric_map.setdefault(m.metric_name, []).append(m.value)
+
+    # Detect patterns
+    probable_causes = []
+    evidence = []
+    suggested_steps = []
+
+    # Rule 1: High CPU + topic drop => resource contention
+    cpu_values = metric_map.get("cpu_percent", [])
+    topic_rate_values = metric_map.get("topic_rate_hz", [])
+
+    if cpu_values and max(cpu_values) > 85:
+        evidence.append({
+            "signal": "cpu_percent",
+            "peak": max(cpu_values),
+            "threshold": 85,
+            "description": f"CPU peaked at {max(cpu_values):.1f}%",
+        })
+        if topic_rate_values and min(topic_rate_values) < 5:
+            probable_causes.append({
+                "cause": "Resource contention",
+                "confidence": 0.85,
+                "description": "High CPU utilization caused topic publish rate degradation. "
+                "The system was under compute pressure, leading to dropped or delayed messages.",
+            })
+            evidence.append({
+                "signal": "topic_rate_hz",
+                "minimum": min(topic_rate_values),
+                "threshold": 5,
+                "description": f"Topic rate dropped to {min(topic_rate_values):.1f} Hz",
+            })
+            suggested_steps.append("Profile CPU-intensive nodes to identify bottlenecks")
+            suggested_steps.append("Consider offloading inference to GPU or dedicated process")
+            suggested_steps.append("Add CPU resource limits to non-critical containers")
+
+    # Rule 2: Rising temperature + latency spike => thermal throttling
+    temp_values = metric_map.get("gpu_temp_c", []) or metric_map.get("cpu_temp_c", [])
+    latency_values = metric_map.get("inference_latency_ms", [])
+
+    if temp_values and max(temp_values) > 75:
+        evidence.append({
+            "signal": "temperature",
+            "peak": max(temp_values),
+            "threshold": 75,
+            "description": f"Temperature peaked at {max(temp_values):.1f}°C",
+        })
+        if latency_values and max(latency_values) > 100:
+            probable_causes.append({
+                "cause": "Thermal throttling",
+                "confidence": 0.80,
+                "description": "GPU/CPU temperature exceeded thermal limits, causing frequency throttling "
+                "and increased inference latency.",
+            })
+            evidence.append({
+                "signal": "inference_latency_ms",
+                "peak": max(latency_values),
+                "threshold": 100,
+                "description": f"Inference latency peaked at {max(latency_values):.1f}ms",
+            })
+            suggested_steps.append("Improve device cooling or reduce ambient temperature exposure")
+            suggested_steps.append("Lower inference frequency or model complexity")
+            suggested_steps.append("Add thermal monitoring alerts before throttling threshold")
+
+    # Rule 3: Node crash + watchdog timeout => process failure chain
+    crash_events = [e for e in events if "crash" in e.message.lower() or "exit" in e.message.lower()]
+    watchdog_events = [e for e in events if "watchdog" in e.message.lower() or "timeout" in e.message.lower()]
+
+    if crash_events and watchdog_events:
+        probable_causes.append({
+            "cause": "Process failure chain",
+            "confidence": 0.75,
+            "description": "A node crash triggered cascading watchdog timeouts. "
+            "The initial failure propagated to dependent nodes.",
+        })
+        evidence.append({
+            "signal": "events",
+            "crash_count": len(crash_events),
+            "watchdog_count": len(watchdog_events),
+            "description": f"{len(crash_events)} crash events, {len(watchdog_events)} watchdog timeouts",
+        })
+        suggested_steps.append("Check crash logs for the first node that failed")
+        suggested_steps.append("Review node dependency graph for cascading failure paths")
+        suggested_steps.append("Add restart policies and health checks to critical nodes")
+
+    # Rule 4: Error log spike
+    error_events = [e for e in events if e.level.value in ("error", "fatal")]
+    if len(error_events) > 5:
+        evidence.append({
+            "signal": "error_logs",
+            "count": len(error_events),
+            "description": f"{len(error_events)} error/fatal log entries during incident",
+        })
+
+    # Fallback if no rules matched
+    if not probable_causes:
+        probable_causes.append({
+            "cause": "Unknown — manual investigation needed",
+            "confidence": 0.3,
+            "description": "No clear pattern matched the available telemetry. "
+            "Manual review of logs and metrics is recommended.",
+        })
+        suggested_steps.append("Review the full event log chronologically")
+        suggested_steps.append("Check for external factors (network, power, physical environment)")
+
+    # Sort by confidence
+    probable_causes.sort(key=lambda x: x["confidence"], reverse=True)
+
+    summary = probable_causes[0]["description"] if probable_causes else "No analysis available."
+
+    return {
+        "summary": summary,
+        "probable_causes": probable_causes,
+        "evidence": evidence,
+        "suggested_steps": suggested_steps,
+        "metrics_analyzed": len(metrics),
+        "events_analyzed": len(events),
+    }

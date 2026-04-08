@@ -1,0 +1,19 @@
+{
+  "id": "inc-00100-0001-0001-0001-000000000001",
+  "project_id": "11111111-1111-1111-1111-111111111111",
+  "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "deployment_id": "d1111111-d111-d111-d111-d11111111111",
+  "title": "CPU contention causing /cmd_vel topic degradation",
+  "description": "High CPU utilization on jetson-orin-nav-01 caused the /cmd_vel topic publish rate to drop from 10Hz to 2Hz over a 90-second window. The inference node and navigation stack competed for CPU resources, leading to degraded robot velocity control. The issue self-resolved when the inference workload completed.",
+  "severity": "high",
+  "status": "resolved",
+  "duration_seconds": 90,
+  "root_cause": "Concurrent ML inference job consumed excessive CPU, starving the navigation controller of compute resources.",
+  "labels": {
+    "category": "resource-contention",
+    "subsystem": "navigation",
+    "auto_detected": true
+  },
+  "created_at_offset_seconds": -3600,
+  "resolved_at_offset_seconds": -3510
+}

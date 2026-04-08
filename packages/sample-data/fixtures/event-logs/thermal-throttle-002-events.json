@@ -1,0 +1,155 @@
+[
+  {
+    "id": "evt-002-01",
+    "incident_id": "inc-00200-0002-0002-0002-000000000002",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 0,
+    "level": "info",
+    "source": "thermal_monitor",
+    "message": "GPU temperature: 65C. Within operating range."
+  },
+  {
+    "id": "evt-002-02",
+    "incident_id": "inc-00200-0002-0002-0002-000000000002",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 10,
+    "level": "info",
+    "source": "thermal_monitor",
+    "message": "GPU temperature rising: 69C. Ambient temperature elevated."
+  },
+  {
+    "id": "evt-002-03",
+    "incident_id": "inc-00200-0002-0002-0002-000000000002",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 20,
+    "level": "warning",
+    "source": "thermal_monitor",
+    "message": "GPU temperature warning: 74C. Approaching thermal limit."
+  },
+  {
+    "id": "evt-002-04",
+    "incident_id": "inc-00200-0002-0002-0002-000000000002",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 30,
+    "level": "warning",
+    "source": "inference_node",
+    "message": "Inference latency increasing: 52ms (baseline 35ms)"
+  },
+  {
+    "id": "evt-002-05",
+    "incident_id": "inc-00200-0002-0002-0002-000000000002",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 38,
+    "level": "warning",
+    "source": "thermal_monitor",
+    "message": "GPU temperature: 79C. Fan speed at maximum."
+  },
+  {
+    "id": "evt-002-06",
+    "incident_id": "inc-00200-0002-0002-0002-000000000002",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 45,
+    "level": "error",
+    "source": "thermal_monitor",
+    "message": "GPU temperature critical: 84C. Thermal throttling initiated."
+  },
+  {
+    "id": "evt-002-07",
+    "incident_id": "inc-00200-0002-0002-0002-000000000002",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 48,
+    "level": "error",
+    "source": "tracemind_detector",
+    "message": "INCIDENT CREATED: GPU thermal throttling during outdoor operation [severity=critical]"
+  },
+  {
+    "id": "evt-002-08",
+    "incident_id": "inc-00200-0002-0002-0002-000000000002",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 55,
+    "level": "error",
+    "source": "inference_node",
+    "message": "Inference latency severely degraded: 128ms. Detection confidence dropping."
+  },
+  {
+    "id": "evt-002-09",
+    "incident_id": "inc-00200-0002-0002-0002-000000000002",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 62,
+    "level": "error",
+    "source": "thermal_monitor",
+    "message": "GPU temperature: 88C. Clock speed reduced to 60%."
+  },
+  {
+    "id": "evt-002-10",
+    "incident_id": "inc-00200-0002-0002-0002-000000000002",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 70,
+    "level": "error",
+    "source": "thermal_monitor",
+    "message": "GPU temperature peak: 92C. Emergency clock reduction to 40%."
+  },
+  {
+    "id": "evt-002-11",
+    "incident_id": "inc-00200-0002-0002-0002-000000000002",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 75,
+    "level": "error",
+    "source": "inference_node",
+    "message": "Inference latency critical: 210ms. Obstacle detection unreliable."
+  },
+  {
+    "id": "evt-002-12",
+    "incident_id": "inc-00200-0002-0002-0002-000000000002",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 80,
+    "level": "warning",
+    "source": "nav2_controller",
+    "message": "Reducing navigation speed due to degraded obstacle detection"
+  },
+  {
+    "id": "evt-002-13",
+    "incident_id": "inc-00200-0002-0002-0002-000000000002",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 88,
+    "level": "info",
+    "source": "thermal_monitor",
+    "message": "Robot moved to shaded area. Ambient temperature decreasing."
+  },
+  {
+    "id": "evt-002-14",
+    "incident_id": "inc-00200-0002-0002-0002-000000000002",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 98,
+    "level": "info",
+    "source": "thermal_monitor",
+    "message": "GPU temperature decreasing: 83C. Throttling easing."
+  },
+  {
+    "id": "evt-002-15",
+    "incident_id": "inc-00200-0002-0002-0002-000000000002",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 108,
+    "level": "info",
+    "source": "thermal_monitor",
+    "message": "GPU temperature: 75C. Clock speed restored to 80%."
+  },
+  {
+    "id": "evt-002-16",
+    "incident_id": "inc-00200-0002-0002-0002-000000000002",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 115,
+    "level": "info",
+    "source": "inference_node",
+    "message": "Inference latency recovering: 48ms"
+  },
+  {
+    "id": "evt-002-17",
+    "incident_id": "inc-00200-0002-0002-0002-000000000002",
+    "device_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "offset_seconds": 120,
+    "level": "info",
+    "source": "tracemind_detector",
+    "message": "INCIDENT RESOLVED: GPU thermal throttling during outdoor operation. Duration: 120s."
+  }
+]
