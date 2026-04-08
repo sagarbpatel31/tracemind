@@ -6,7 +6,11 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/tracemind/edge-agent/internal/collector"
 )
+
+const demoProjectID = "11111111-1111-1111-1111-111111111111"
 
 // Client sends telemetry data to the TraceMind API.
 type Client struct {
@@ -31,46 +35,41 @@ func NewClient(apiURL, deviceID, deviceName string) *Client {
 // RegisterDevice registers this device with the TraceMind API.
 func (c *Client) RegisterDevice() error {
 	payload := map[string]string{
-		"device_id":   c.deviceID,
+		"project_id":  demoProjectID,
 		"device_name": c.deviceName,
 	}
 	return c.post("/api/v1/devices/register", payload)
 }
 
-// MetricsPayload is the body sent to the metrics ingest endpoint.
-type MetricsPayload struct {
-	DeviceID  string      `json:"device_id"`
-	Timestamp time.Time   `json:"timestamp"`
-	Metrics   interface{} `json:"metrics"`
-}
-
-// SendMetrics posts a metrics snapshot to the API.
-func (c *Client) SendMetrics(metrics interface{}) error {
-	payload := MetricsPayload{
-		DeviceID:  c.deviceID,
-		Timestamp: time.Now().UTC(),
-		Metrics:   metrics,
+// SendMetrics posts a metrics snapshot to the API as a batch.
+func (c *Client) SendMetrics(m collector.SystemMetrics) error {
+	now := time.Now().UTC().Format(time.RFC3339)
+	metrics := []map[string]interface{}{
+		{"device_id": c.deviceID, "timestamp": now, "metric_name": "cpu_percent", "value": m.CPUUsagePercent, "unit": "%"},
+		{"device_id": c.deviceID, "timestamp": now, "metric_name": "memory_percent", "value": float64(m.MemoryUsedBytes) / float64(m.MemoryTotalBytes+1) * 100, "unit": "%"},
+		{"device_id": c.deviceID, "timestamp": now, "metric_name": "disk_used_percent", "value": float64(m.DiskUsedBytes) / float64(m.DiskTotalBytes+1) * 100, "unit": "%"},
+	}
+	payload := map[string]interface{}{
+		"metrics": metrics,
 	}
 	return c.post("/api/v1/ingest/metrics", payload)
 }
 
-// LogEntry represents a single log line to ingest.
-type LogEntry struct {
-	DeviceID  string    `json:"device_id"`
-	Timestamp time.Time `json:"timestamp"`
-	Level     string    `json:"level"`
-	Message   string    `json:"message"`
-}
-
-// SendLog posts a log entry to the API.
-func (c *Client) SendLog(level, message string) error {
-	entry := LogEntry{
-		DeviceID:  c.deviceID,
-		Timestamp: time.Now().UTC(),
-		Level:     level,
-		Message:   message,
+// SendLog posts a log entry to the API as a batch.
+func (c *Client) SendLog(level, source, message string) error {
+	now := time.Now().UTC().Format(time.RFC3339)
+	payload := map[string]interface{}{
+		"logs": []map[string]interface{}{
+			{
+				"device_id": c.deviceID,
+				"timestamp": now,
+				"level":     level,
+				"source":    source,
+				"message":   message,
+			},
+		},
 	}
-	return c.post("/api/v1/ingest/logs", entry)
+	return c.post("/api/v1/ingest/logs", payload)
 }
 
 // post marshals payload to JSON and POSTs it to the given path.
