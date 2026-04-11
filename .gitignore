@@ -31,5 +31,7 @@ Thumbs.db
 storage/
 *.zip
 
-# Go
+# Go binaries
 agents/edge-agent/edge-agent
+agents/edge-agent/agent
+agents/edge-agent/tracemind-agent
