@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: tracemind-api
+    runtime: docker
+    region: oregon
+    plan: free
+    branch: main
+    rootDir: apps/api
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: DATABASE_URL
+        sync: false  # set manually in Render dashboard from Supabase
+      - key: CORS_ORIGINS
+        value: https://tracemind.vercel.app,http://localhost:3000
+      - key: JWT_SECRET_KEY
+        generateValue: true  # Render will generate a secure random value
+      - key: STORAGE_PATH
+        value: /tmp/storage
+      - key: PORT
+        value: "8000"

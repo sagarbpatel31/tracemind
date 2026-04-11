@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -11,6 +12,26 @@ class Settings(BaseSettings):
     jwt_expiration_minutes: int = 60
 
     model_config = {"env_file": ".env", "extra": "ignore"}
+
+    @field_validator("database_url")
+    @classmethod
+    def normalize_postgres_url(cls, v: str) -> str:
+        """Auto-rewrite plain postgres:// URLs to postgresql+asyncpg:// for SQLAlchemy.
+
+        Supabase, Render, and Heroku all expose URLs as postgres:// or postgresql://
+        but SQLAlchemy with asyncpg driver requires postgresql+asyncpg://.
+        Also strips ?sslmode=require since asyncpg uses ssl=true via different mechanism.
+        """
+        if v.startswith("postgres://"):
+            v = v.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif v.startswith("postgresql://") and "+asyncpg" not in v:
+            v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        # asyncpg doesn't accept sslmode in URL params; remove it (asyncpg uses TLS by default for hosted DBs)
+        if "?" in v:
+            base, params = v.split("?", 1)
+            kept = [p for p in params.split("&") if not p.startswith("sslmode=")]
+            v = base + ("?" + "&".join(kept) if kept else "")
+        return v
 
 
 settings = Settings()

@@ -1,0 +1,40 @@
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info
+.pytest_cache
+.mypy_cache
+.ruff_cache
+
+# Virtualenvs
+.venv
+venv
+env
+
+# Local data
+storage/
+*.zip
+
+# Env files
+.env
+.env.local
+
+# IDE
+.vscode
+.idea
+*.swp
+
+# OS
+.DS_Store
+
+# Tests
+tests/
+test_*.py
+*_test.py
+
+# Git
+.git
+.gitignore

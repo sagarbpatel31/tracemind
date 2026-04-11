@@ -3,10 +3,14 @@
   "configurations": [
     {
       "name": "web",
-      "runtimeExecutable": "bash",
-      "runtimeArgs": ["/Users/sagarpatel/Documents/Tracemind/.claude/start-web.sh"],
+      "runtimeExecutable": "/Users/sagarpatel/.nvm/versions/node/v22.19.0/bin/node",
+      "runtimeArgs": [
+        "/Users/sagarpatel/Documents/Tracemind/node_modules/next/dist/bin/next",
+        "dev"
+      ],
       "port": 3000,
-      "autoPort": false
+      "autoPort": false,
+      "cwd": "apps/web"
     },
     {
       "name": "api",
