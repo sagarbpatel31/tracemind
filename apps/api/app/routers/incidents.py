@@ -170,7 +170,7 @@ async def analyze_incident_endpoint(
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")
 
-    analysis = await analyze_incident(incident_id, db)
+    analysis = await analyze_incident(incident_id, db, incident_title=incident.title)
 
     incident.analysis_json = analysis
     incident.root_cause_summary = analysis.get("summary", "")

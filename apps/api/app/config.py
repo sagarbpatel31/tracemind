@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     jwt_secret_key: str = "tracemind-dev-secret-change-in-production"
     jwt_algorithm: str = "HS256"
     jwt_expiration_minutes: int = 60
+    anthropic_api_key: str = ""  # optional — LLM summary disabled if empty
 
     model_config = {"env_file": ".env", "extra": "ignore"}
 

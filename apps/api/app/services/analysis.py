@@ -1,13 +1,54 @@
 import uuid
 from datetime import timedelta
 
+import anthropic
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.models.telemetry import EventLog, MetricPoint
 
 
-async def analyze_incident(incident_id: uuid.UUID, db: AsyncSession) -> dict:
+async def generate_llm_summary(
+    incident_title: str,
+    top_cause: dict,
+    evidence_signals: list[str],
+) -> str:
+    """Generate a terse 2-sentence incident summary using Claude Haiku.
+
+    Token budget:
+    - Input: ~120 tokens (prompt + evidence, capped at 4 signals)
+    - Output: max_tokens=80 (hard ceiling — 2 sentences ≈ 40–60 tokens)
+    - Model: claude-haiku-4-5 (~25× cheaper than Sonnet for this task)
+    - Cost: ~$0.03 per 1,000 incident analyses
+
+    Falls back to the rules-based cause string if ANTHROPIC_API_KEY is not set.
+    """
+    if not settings.anthropic_api_key:
+        return top_cause.get("description", top_cause.get("cause", "Analysis unavailable."))
+
+    client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+
+    # Cap evidence at 4 signals to keep input tokens tight
+    evidence_str = "; ".join(evidence_signals[:4]) if evidence_signals else "none"
+
+    prompt = (
+        f"Incident: {incident_title}\n"
+        f"Top cause: {top_cause['cause']} (confidence: {top_cause['confidence']:.0%})\n"
+        f"Evidence: {evidence_str}\n"
+        f"Remediation hint: {top_cause.get('description', 'investigate')}\n\n"
+        "Write 2 sentences: what failed and what to do. Terse. No preamble."
+    )
+
+    message = await client.messages.create(
+        model="claude-haiku-4-5",
+        max_tokens=80,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return message.content[0].text.strip()
+
+
+async def analyze_incident(incident_id: uuid.UUID, db: AsyncSession, incident_title: str = "") -> dict:
     """Rules-based root cause analysis for an incident.
 
     Analyzes metric patterns and event logs to determine probable causes.
@@ -196,7 +237,15 @@ async def analyze_incident(incident_id: uuid.UUID, db: AsyncSession) -> dict:
     # Sort by confidence
     probable_causes.sort(key=lambda x: x["confidence"], reverse=True)
 
-    summary = probable_causes[0]["description"] if probable_causes else "No analysis available."
+    # Collect evidence signal descriptions (for LLM prompt)
+    evidence_signals = [e.get("description", "") for e in evidence if e.get("description")]
+
+    # Generate terse 2-sentence summary via Claude Haiku (falls back to rules text if no API key)
+    summary = await generate_llm_summary(
+        incident_title=incident_title or str(incident_id),
+        top_cause=probable_causes[0],
+        evidence_signals=evidence_signals,
+    )
 
     return {
         "summary": summary,

@@ -17,5 +17,7 @@ services:
         generateValue: true  # Render will generate a secure random value
       - key: STORAGE_PATH
         value: /tmp/storage
+      - key: ANTHROPIC_API_KEY
+        sync: false  # paste from console.anthropic.com — enables LLM incident summaries
       - key: PORT
         value: "8000"
