@@ -1,38 +1,63 @@
 # Current Task
 
-## Branch: `add-ai-engineering-system`
+## Active branch: `add-ai-engineering-system`
 
-Adding an AI engineering context layer — `.ai/`, `CLAUDE.md`, `AGENTS.md` — to preserve work state, improve handoff between Claude/Codex sessions, and reduce repeated codebase re-reading.
+Adding AI engineering context layer to the repo. No production code changes on this branch.
 
-**No production code is being modified on this branch.**
+**Scope:**
+- `.ai/` — 9 context files for AI agent handoff
+- `agents/claude.md` + `agents/codex.md` — per-agent usage rules
+- `CLAUDE.md` — Claude Code session bootstrap with read-first enforcement
+- `AGENTS.md` — Codex/generic agent bootstrap with read-first enforcement
 
-## What's staged / in-progress
+**Status:** In progress (this file is being written as part of the work).
 
-The following were committed on `main` before this branch:
+---
 
-- ✅ `anthropic>=0.40.0` added to pyproject.toml
-- ✅ `generate_llm_summary()` in analysis.py — Claude Haiku, max_tokens=80, graceful fallback
-- ✅ `anthropic_api_key` in config.py
-- ✅ `ANTHROPIC_API_KEY` in render.yaml (sync: false)
-- ✅ caveman installed (6 skills: /caveman, /caveman-commit, /caveman-review, /caveman-compress, /caveman-help, /compress)
-- ✅ graphify installed — 263 nodes, 479 edges, 36 communities, git hooks active
-- ✅ claude-mem installed — worker running on 127.0.0.1:37701
+## What is complete on `main`
 
-## Uncommitted on this branch (before this task)
+| Feature | Status | File(s) |
+|---------|--------|---------|
+| FastAPI backend (7 routers, 9 models) | ✅ | apps/api/app/ |
+| JWT auth (register/login/me) | ✅ | app/routers/auth.py, app/security.py |
+| Incident CRUD + analysis + replay bundle | ✅ | app/routers/incidents.py, app/services/ |
+| Device registration + heartbeat + deployments | ✅ | app/routers/devices.py |
+| Telemetry ingest (logs/metrics/events) | ✅ | app/routers/ingest.py |
+| Rules-based analysis engine (7 rules) | ✅ | app/services/analysis.py |
+| Claude Haiku LLM summarization | ✅ | app/services/analysis.py:generate_llm_summary() |
+| Replay bundle (zip) | ✅ | app/services/replay_bundle.py |
+| Seed endpoint + demo data | ✅ | app/routers/seed.py |
+| Go edge agent | ✅ (stubs) | agents/edge-agent/ |
+| Python ROS2 collector | ✅ (sim mode) | agents/ros2-collector/ |
+| Next.js frontend (dashboard, incidents, login) | ✅ | apps/web/src/ |
+| Docker Compose local dev | ✅ | deploy/docker-compose/ |
+| Render IaC (render.yaml) | ✅ | apps/api/render.yaml |
+| Vercel frontend deployed | ✅ | https://tracemind.vercel.app |
+| Production Dockerfile | ✅ | apps/api/Dockerfile |
+| Public GitHub repo | ✅ | github.com/sagarbpatel31/tracemind |
+| caveman dev tooling | ✅ | .agents/skills/ |
+| graphify knowledge graph | ✅ | graphify-out/ (git-ignored) |
+| claude-mem session memory | ✅ | worker on 127.0.0.1:37701 |
 
-Staged but not yet committed:
-- `.agents/skills/caveman*/` — caveman skill files
-- `.kiro/skills/caveman*/` — kiro symlinks
-- `skills-lock.json`
-- `CLAUDE.md` (graphify section)
-- `.gitignore` update (graphify-out/ ignored)
+---
 
-These will be committed as part of the AI engineering layer commit on this branch.
+## What is NOT done (production blockers)
 
-## Pending (not started, separate from this branch)
+| Task | Blocker | Who |
+|------|---------|-----|
+| Supabase DB provisioned | Needs account signup + project creation | User |
+| Render API deployed | Needs account signup + Blueprint import | User |
+| `NEXT_PUBLIC_API_URL` set in Vercel | Needs Render URL first | Claude after user |
+| Production DB seeded | Needs Render URL first | Claude after user |
 
-1. **Render + Supabase deployment** — user must sign up, provide DB URI + deploy URL
-2. **Vercel env var** — `NEXT_PUBLIC_API_URL` needs Render URL
-3. **Seed production DB** — `curl -X POST https://tracemind-api.onrender.com/api/v1/seed/demo`
-4. **Edge agent real metrics** — replace CPU/disk/network stubs in `collector/system.go`
-5. **Auto-trigger incidents** from agent anomaly detection
+## What is NOT done (code quality)
+
+| Issue | Location | Priority |
+|-------|----------|---------|
+| Edge agent collector stubs (simulated CPU/disk/net) | agents/edge-agent/internal/collector/system.go | Medium |
+| Hard-coded project_id in edge agent | agents/edge-agent/internal/sender/http.go | Medium |
+| ros2_snapshot.json is placeholder in replay bundle | app/services/replay_bundle.py | Low |
+| alembic/versions/ is empty — no real migrations | apps/api/alembic/ | High (before prod schema changes) |
+| No auth on ingest endpoints | app/routers/ingest.py | Medium |
+| JWT in localStorage (not httpOnly cookie) | apps/web/src/lib/auth.ts | Low (MVP acceptable) |
+| No test suite | anywhere | Medium |

@@ -1,93 +1,126 @@
-# TraceMind — AI Agent Context (Codex / OpenAI / Generic)
+# TraceMind — AI Agent Bootstrap
 
-## Project summary
-TraceMind: incident intelligence for ROS2 and edge AI robots. Captures field failures, correlates telemetry, generates replayable bundles with AI root-cause analysis.
+## ⚠️ READ BEFORE CODING
 
-**Stack:** FastAPI + SQLAlchemy 2.0 async + Postgres · Next.js 16 + shadcn/ui v5 · Go edge agent · Python ROS2 collector
+All AI agents (Codex, Claude, Gemini, Cursor, Copilot) MUST read these files before writing any code:
 
-**Repo:** https://github.com/sagarbpatel31/tracemind
+```
+1. .ai/architecture.md      — full system topology, all models, all API routes
+2. .ai/current_task.md      — what is done, what is in progress, what is pending
+3. .ai/next_steps.md        — prioritized engineering backlog
+4. .ai/failure_patterns.md  — confirmed bugs with exact symptoms and fixes
+```
 
-## Context files (read these before making changes)
+Agent-specific rules:
+```
+agents/claude.md   — Claude Code rules, tool paths, commit style
+agents/codex.md    — Codex constraints, stack facts, pattern reference
+```
 
-| File | Contents |
-|------|----------|
-| `.ai/architecture.md` | Full system topology, all models, all API routes |
-| `.ai/handoff.md` | Current state — what's done, what's pending, env vars needed |
-| `.ai/decisions.md` | Why key choices were made (bcrypt, no passlib, shadcn v5, etc.) |
-| `.ai/failure_patterns.md` | Known bugs with exact fixes — read before debugging |
-| `.ai/principles.md` | What to build and what NOT to build |
-| `.ai/debugging.md` | Where to look for each class of error |
-| `.ai/prompts.md` | LLM prompt templates and token budget guidelines |
-| `.ai/next_steps.md` | Ordered backlog — what comes next |
+---
 
-## Hard constraints
+## Project
+
+TraceMind — incident intelligence for ROS2 and edge AI robots.
+Repo: github.com/sagarbpatel31/tracemind (public)
+Frontend: https://tracemind.vercel.app
+
+---
+
+## Repository layout
+
+```
+apps/api/              FastAPI backend (Python 3.11, SQLAlchemy 2.0 async, asyncpg)
+apps/web/              Next.js 16 frontend (TypeScript, Tailwind, shadcn/ui v5)
+agents/edge-agent/     Go — system metrics collector for edge devices
+agents/ros2-collector/ Python — ROS2 topic/node monitor
+agents/claude.md       Claude-specific usage rules
+agents/codex.md        Codex-specific usage rules
+packages/sample-data/  Seed script + JSON fixtures
+deploy/docker-compose/ docker-compose.yml — postgres + api + web
+.ai/                   AI engineering context (9 files — read before coding)
+```
+
+---
+
+## Absolute constraints (apply to all agents)
 
 ### Never do these
-- Do not add `passlib` — incompatible with bcrypt 4.x on Python 3.11
-- Do not use `<Button asChild>` — shadcn v5 does not have this prop
-- Do not hardcode `ANTHROPIC_API_KEY` — it is optional; all LLM calls need a fallback
-- Do not modify files outside the task scope on the `add-ai-engineering-system` branch
-- Do not build fleet orchestration, teleoperation, OTA, digital twin, or simulation features
+- `from passlib.context import CryptContext` — passlib incompatible with bcrypt 4.x
+- `<Button asChild>` — shadcn v5 does not have this prop
+- Ingest payload as flat array `[{...}]` — must be `{metrics: [{...}]}`
+- LLM call without fallback — `ANTHROPIC_API_KEY` is optional
+- Hardcode any secret or API key
 
 ### Always do these
-- Ingest routes expect `{metrics: [...]}` wrapper — not flat arrays
-- `DATABASE_URL` is auto-normalized in `config.py` — do not manually edit Supabase/Render URLs
-- New LLM calls: Haiku model, `max_tokens` ceiling, graceful fallback if no API key
-- New models: extend `UUIDMixin` and `TimestampMixin` from `apps/api/app/models/base.py`
+- Read `.ai/architecture.md` before touching any module
+- Read `.ai/failure_patterns.md` before debugging
+- New DB column on existing table → provide `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` SQL
+- New model → extend `UUIDMixin` and `TimestampMixin` from `app/models/base.py`
+- New LLM call → `model="claude-haiku-4-5"`, explicit `max_tokens`, fallback path
 
-## API routes quick reference
+---
+
+## API quick reference
+
+All routes prefixed `/api/v1`:
 
 ```
-GET  /api/v1/health
-POST /api/v1/auth/register         {email, password, name}
-POST /api/v1/auth/login            {email, password}
-GET  /api/v1/auth/me               Bearer token required
+GET  /health
+POST /auth/register    {email, password, name}
+POST /auth/login       {email, password} → {access_token, token_type}
+GET  /auth/me          Bearer required
 
-POST /api/v1/devices/register
-GET  /api/v1/devices/
-GET  /api/v1/devices/{id}
-POST /api/v1/devices/heartbeat/{id}
-POST /api/v1/devices/deployments
+POST /devices/register
+GET  /devices/         ?project_id=
+GET  /devices/{id}
+POST /devices/heartbeat/{id}
+POST /devices/deployments
 
-POST /api/v1/incidents/
-GET  /api/v1/incidents/
-GET  /api/v1/incidents/{id}
-GET  /api/v1/incidents/{id}/events
-GET  /api/v1/incidents/{id}/metrics
-POST /api/v1/incidents/{id}/analyze
-POST /api/v1/incidents/{id}/replay-bundle
-GET  /api/v1/bundles/{id}          download zip
+POST /incidents/
+GET  /incidents/       ?project_id, device_id, status, limit, offset
+GET  /incidents/{id}
+GET  /incidents/{id}/events    ?limit=500
+GET  /incidents/{id}/metrics   ?limit=5000
+POST /incidents/{id}/analyze
+POST /incidents/{id}/replay-bundle
+GET  /bundles/{id}     download ZIP
 
-POST /api/v1/ingest/logs           {logs: [...]}
-POST /api/v1/ingest/metrics        {metrics: [...]}
-POST /api/v1/ingest/events         {events: [...]}
+POST /ingest/logs      {logs: [...]}
+POST /ingest/metrics   {metrics: [...]}
+POST /ingest/events    {events: [...]}
 
-GET  /api/v1/projects/{id}
-GET  /api/v1/projects/{id}/summary
+GET  /projects/{id}
+GET  /projects/{id}/summary
 
-POST /api/v1/seed/demo             seeds demo@tracemind.ai / demo123
+POST /seed/demo        creates demo@tracemind.ai / demo123 + 3 devices + 3 incidents
 ```
 
-## Analysis engine (apps/api/app/services/analysis.py)
+---
 
-7 rules, deterministic, confidence-scored. Run via `POST /incidents/{id}/analyze`.
+## Analysis engine summary
+
+`apps/api/app/services/analysis.py` — 7 rules, confidence-scored, then optional Haiku summary:
 
 | Rule | Trigger | Confidence |
 |------|---------|------------|
-| Resource contention | CPU > 85% + topic_rate < 5 Hz | 0.85 |
-| Thermal throttling | temp > 75°C + latency > 100ms | 0.80 |
+| Resource contention | cpu_percent > 85 AND topic_rate_hz < 5 | 0.85 |
 | Version regression | deployment + regression keywords in events | 0.82 |
-| Process failure chain | crash + watchdog events | 0.75 |
+| Thermal throttling | temp > 75°C AND inference_latency_ms > 100 | 0.80 |
+| Process failure chain | crash events AND watchdog events | 0.75 |
 | Mission abort | abort/e-stop events | evidence only |
 | Latency degradation | 2× latency increase, no thermal | evidence only |
-| Error spike | > 3 error/fatal logs | evidence only |
+| Error spike | error/fatal logs > 3 | evidence only |
 
-After rules: optional Claude Haiku call (`generate_llm_summary()`), max_tokens=80, fallback to rules text.
+Fallback if no rules match: `"Unknown — manual investigation needed"` (confidence 0.3)
 
-## Local dev
+---
+
+## Local dev quick start
+
 ```bash
 cd deploy/docker-compose && docker compose up -d
 curl -X POST http://localhost:8000/api/v1/seed/demo
-# Dashboard: http://localhost:3000
-# API docs:  http://localhost:8000/docs
+# api: http://localhost:8000/docs
+# web: http://localhost:3000  (demo@tracemind.ai / demo123)
 ```

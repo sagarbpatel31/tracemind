@@ -1,112 +1,125 @@
-# Technical Decisions
+# Architecture & Implementation Decisions
 
-Key decisions made during the build — why, what was rejected, what the tradeoffs are.
-
----
-
-## Auth: bcrypt directly, not passlib
-
-**Decision:** `import bcrypt` + `bcrypt.hashpw/checkpw` directly in `security.py`
-
-**Rejected:** `passlib[bcrypt]` (was the first implementation)
-
-**Why:** passlib is incompatible with `bcrypt>=4.x` on Python 3.11. Throws `ValueError: password cannot be longer than 72 bytes` even on short passwords. bcrypt 4.x changed internal API that passlib depends on and passlib hasn't kept up.
-
-**File:** `apps/api/app/security.py`
+Decisions visible in the codebase, with rationale and tradeoffs.
 
 ---
 
-## Postgres URL normalization via field_validator
+## 1. bcrypt directly — not passlib
 
-**Decision:** `@field_validator("database_url")` auto-rewrites any `postgres://` or `postgresql://` URL to `postgresql+asyncpg://` and strips `?sslmode=require`
+**Location:** `apps/api/app/security.py`, `apps/api/pyproject.toml`
 
-**Why:** Supabase, Render, and Heroku all expose `postgres://` URLs. SQLAlchemy with asyncpg requires `postgresql+asyncpg://`. asyncpg also doesn't accept `sslmode` as a URL param (uses its own TLS mechanism). Without this, every cloud deploy breaks silently.
+**Decision:** `import bcrypt` → `bcrypt.hashpw()` / `bcrypt.checkpw()` directly.
 
-**File:** `apps/api/app/config.py`
+**Rejected:** `passlib[bcrypt]`
 
----
+**Why:** passlib's bcrypt wrapper calls internal API that changed in bcrypt 4.x. On Python 3.11 with bcrypt>=4.0, passlib throws `ValueError: password cannot be longer than 72 bytes` on any password regardless of length. Passlib is unmaintained against this.
 
-## No passlib, no Alembic (for now)
-
-**Decision:** No DB migrations — `Base.metadata.create_all()` on startup
-
-**Why:** MVP speed. `create_all` is idempotent for new tables. For schema changes during dev, columns were added via raw `ALTER TABLE` SQL.
-
-**Tradeoff:** Not suitable for production schema evolution once real data exists. Alembic is the next step (see next_steps.md).
+**Rule:** Never add `passlib` back to this project.
 
 ---
 
-## Rules-based analysis first, LLM second
+## 2. Postgres URL auto-normalization
 
-**Decision:** 7 deterministic rules run first; LLM only synthesizes their output into a 2-sentence summary
+**Location:** `apps/api/app/config.py:normalize_postgres_url()`
 
-**Why:** Rules are free, instant, deterministic, and debuggable. LLM adds narrative polish but not reasoning. Analysis still works (rules text fallback) if `ANTHROPIC_API_KEY` is not set.
+**Decision:** `@field_validator` auto-rewrites `postgres://` → `postgresql+asyncpg://` and strips `?sslmode=require`.
 
-**Cost:** claude-haiku-4-5, max_tokens=80, ~$0.03/1000 analyses
+**Why:** Supabase, Render, and Heroku all emit `postgres://` URIs. SQLAlchemy+asyncpg requires `postgresql+asyncpg://`. asyncpg uses its own TLS mechanism and rejects `sslmode` in URL params.
 
-**Files:** `apps/api/app/services/analysis.py`
-
----
-
-## Haiku not Sonnet for incident summarization
-
-**Decision:** `claude-haiku-4-5` for `generate_llm_summary()`
-
-**Why:** 2-sentence synthesis from structured rules output. Haiku is ~25× cheaper than Sonnet; the task doesn't require deep reasoning, just clean prose from structured input.
+**Implication:** Paste any cloud provider's URI directly — it just works.
 
 ---
 
-## shadcn/ui v5 (base-ui) — no `asChild` prop
+## 3. create_all on startup, not Alembic (for now)
 
-**Decision:** Use `<Link className={cn(buttonVariants({...}))}>` pattern instead of `<Button asChild><Link>...</Link></Button>`
+**Location:** `apps/api/app/main.py:lifespan()`, `apps/api/alembic/` (dir exists, versions/ empty)
 
-**Why:** shadcn v5 (base-ui variant) doesn't export `asChild` prop on Button. TypeScript build fails. Pattern is to spread `buttonVariants()` CSS onto the Link directly.
+**Decision:** `Base.metadata.create_all(bind=engine)` on lifespan startup.
 
-**File:** Any page with a link styled as a button (dashboard, incidents, login)
+**Why:** MVP speed. `create_all` is idempotent for new tables. New columns were added with raw `ALTER TABLE` SQL during dev.
+
+**Tradeoff:** Cannot evolve schema on a live database safely. `alembic/` directory exists and is set up but has no migration files. Must add Alembic before any schema change on a populated production DB.
 
 ---
 
-## Production: Vercel + Render + Supabase (all free)
+## 4. Rules-based analysis first, LLM synthesis second
 
-**Decision:** Vercel (Next.js), Render (FastAPI Docker), Supabase (Postgres)
+**Location:** `apps/api/app/services/analysis.py`
 
-**Rejected:**
-- Railway — presented as free but requires $5 credit then $1/mo; no true free tier for 24/7 service
-- Koyeb — considered; ~5s cold start vs Render's ~60s, but less brand familiarity
-- Fly.io — more config complexity for MVP
+**Decision:** 7 deterministic heuristic rules run first. Claude Haiku only synthesizes the highest-confidence rule output into a 2-sentence prose summary.
+
+**Why:** Rules are free, instant, offline-capable, and deterministic. LLM adds polish not reasoning. System is fully functional without any API key.
+
+**Token constraints:** input ~120 tokens, output capped at `max_tokens=80`, model=claude-haiku-4-5.
+
+---
+
+## 5. shadcn/ui v5 (base-ui) — no asChild
+
+**Location:** `apps/web/src/components/ui/`, all pages
+
+**Decision:** Use `<Link className={cn(buttonVariants({...}))}>` pattern.
+
+**Rejected:** `<Button asChild><Link>` — TypeScript error in v5: `Property 'asChild' does not exist on type 'ButtonHTMLAttributes'`.
+
+**Why:** This project uses the base-ui variant of shadcn v5, which removed the `asChild` Radix prop.
+
+**Rule:** Never use `asChild` on Button. Spread `buttonVariants()` onto the Link directly.
+
+---
+
+## 6. JWT in localStorage (not httpOnly cookie)
+
+**Location:** `apps/web/src/lib/auth.ts` — keys: `tracemind_token`, `tracemind_user`
+
+**Decision:** localStorage-based JWT.
+
+**Why:** Simplest for Next.js app router MVP. No server-side session or cookie handling required.
+
+**Tradeoff:** Vulnerable to XSS token theft. Acceptable for internal tool / MVP. Swap to httpOnly Secure cookie before handling real customer data.
+
+---
+
+## 7. JSONB for evolving data structures
+
+**Location:** `analysis_json` (Incident), `metadata_json` (Deployment, EventLog, MetricPoint), `labels_json` (MetricPoint)
+
+**Decision:** Use Postgres JSONB columns for fields whose schema is still evolving.
+
+**Why:** Avoids premature schema lock-in. Analysis output format, metric labels, and deployment metadata will evolve. Serialize to JSONB until shape stabilizes, then normalize.
+
+---
+
+## 8. No auth on ingest endpoints
+
+**Location:** `apps/api/app/routers/ingest.py`
+
+**Decision:** Ingest routes (`/ingest/logs`, `/ingest/metrics`, `/ingest/events`) accept unauthenticated requests.
+
+**Why:** Edge agents need simple HTTP POST with no token management. Device ID acts as implicit identifier.
+
+**Tradeoff:** Any caller with a valid device_id UUID can inject data. Acceptable for MVP/private deploy. Add device-scoped API tokens before exposing to public internet.
+
+---
+
+## 9. Production: Render + Supabase (free tier)
+
+**Rejected:** Railway (not truly free — $5 credit then $1/mo), Koyeb (less familiar).
+
+**Chosen:** Render free web service + Supabase free Postgres.
 
 **Tradeoffs:**
-- Render free tier: ~60s cold start on first request after 15 min idle
-- Supabase free tier: DB pauses after 1 week inactivity (resumes on next request, ~30s)
+- Render: ~60s cold start after 15 min idle on free tier
+- Supabase: DB pauses after 1 week of no activity (resumes on next request, ~30s)
 
 ---
 
-## Git history: no force-push for path leak
+## 10. Edge agent collector stubs
 
-**Decision:** When `.claude/launch.json` was found to contain `/Users/sagarpatel/` paths, we untracked it going forward rather than rewriting history.
+**Location:** `agents/edge-agent/internal/collector/system.go`
 
-**Why:** Force-push destroys linear history, breaks clones, for negligible security benefit (username already public via GitHub handle).
+**Decision (temporary):** CPU, disk, and network metrics are simulated/estimated. Only memory uses real Go runtime stats.
 
----
+**Comment in code:** "This is a cross-platform stub that returns simulated values. A production implementation would read from /proc (Linux) or use platform-specific syscalls."
 
-## JWT in localStorage (not httpOnly cookie)
-
-**Decision:** Token stored in `localStorage` via `apps/web/src/lib/auth.ts`
-
-**Why:** Simplest for MVP Next.js app router. No server-side session needed.
-
-**Tradeoff:** Vulnerable to XSS. Acceptable for an early-stage internal tool; swap to httpOnly cookies before handling real customer data.
-
----
-
-## Monorepo layout
-
-```
-apps/api/     FastAPI backend
-apps/web/     Next.js frontend
-agents/       Edge agents (Go + Python)
-packages/     Shared utilities / sample data
-deploy/       Docker Compose
-```
-
-**Why:** All in one repo for MVP velocity. Single `git push` deploys everything. Render detects `apps/api/render.yaml` for the API service.
+**Action needed:** Replace with real `/proc` reads or `gopsutil` library before deploying to real Jetson devices.

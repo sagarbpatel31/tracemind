@@ -1,68 +1,69 @@
 # Engineering Principles
 
-Rules for this codebase. Follow these before adding anything.
+Rules for this codebase derived from its architecture and the decisions already made.
 
 ---
 
-## 1. Incident case file, not dashboard
+## 1. Incident case file > dashboard
 
-TraceMind's core artifact is the **incident case file** — a full investigative record with timeline, telemetry, root cause, and replay bundle. Not charts. Not dashboards.
+The core product is the **incident case file**: full investigative record with timeline, correlated telemetry, root cause, and replay bundle. Not charts. Not status boards.
 
-Every feature should answer: *does this help an engineer understand what happened and why?*
+Every new feature must answer: *does this help an engineer understand what failed and why?*
 
-## 2. Rules first, LLM second
+## 2. Rules first, LLM last
 
-Deterministic rules run before any LLM call. The LLM only synthesizes structured rule output into prose — it does not reason, infer, or replace logic.
+Deterministic rules run before any LLM call. The LLM only synthesizes structured rule output into human prose — it does not reason, infer from raw data, or replace logic.
 
-Benefits: rules are free, instant, testable, and work offline. LLM layer is opt-in via `ANTHROPIC_API_KEY`.
+LLM features are always opt-in via `ANTHROPIC_API_KEY`. The system must be fully functional without it.
 
-## 3. Token budget discipline
+## 3. Graceful degradation at every external boundary
 
-Every LLM call has explicit token limits:
-- Input: cap evidence to 4 signals (~120 tokens)
-- Output: `max_tokens=80` hard ceiling
-- Model: Haiku unless task requires reasoning
+| Dependency | Fallback |
+|-----------|---------|
+| `ANTHROPIC_API_KEY` missing | Return rules-based text summary |
+| DB unreachable | FastAPI lifespan fails with clear error |
+| Agent not running | Incidents still creatable manually |
+| Supabase paused | App shows connection error, no data corruption |
 
-Use caveman-style terse prompts: *"Write 2 sentences: what failed and what to do. Terse. No preamble."*
+## 4. Token budget discipline (for all LLM calls)
 
-## 4. Graceful degradation
+- Always set `max_tokens` — never unbounded
+- Cap structured inputs (e.g., `evidence_signals[:4]`)
+- Use Haiku unless the task requires multi-step reasoning
+- Prompt ends with output constraint: `"Terse. No preamble."`
+- Every new LLM call needs a non-LLM fallback path
+- Log `message.usage` in dev before shipping
 
-Every external dependency has a fallback:
-- No `ANTHROPIC_API_KEY` → return rules-based summary text
-- No agent data → incident still creatable manually
-- Supabase paused → app shows connection error, not data corruption
+## 5. Never add passlib
 
-## 5. Do not build outside the wedge
+passlib is incompatible with bcrypt>=4.x on Python 3.11. Use `import bcrypt` directly. See `app/security.py` for the pattern.
 
-Do NOT add: fleet orchestration, teleoperation, OTA updates, digital twin, simulation, real-time video, general DevOps tooling.
+## 6. Never use `asChild` on shadcn Button
 
-TraceMind's wedge: **incident intelligence and reproducibility for ROS2 + Jetson/Linux teams.**
+This project uses shadcn/ui v5 (base-ui). `asChild` prop does not exist. Use `buttonVariants()` spread onto Link. See `decisions.md #5`.
 
-## 6. Keep the schema flexible with JSONB
+## 7. Ingest payload format is always wrapped
 
-Use JSONB columns (`analysis_json`, `metadata_json`, `labels_json`) for evolving data structures. Don't add columns for every new field — serialize into JSONB until the shape is stable.
+Agents send `{metrics: [...]}` not `[...]`. All ingest route schemas expect a wrapper object. Never change this without updating all three agents.
 
-## 7. No migrations until real data exists
+## 8. Don't build outside the wedge
 
-`Base.metadata.create_all()` on startup is fine for MVP. Add Alembic before the first real customer's data is in production.
+**In scope:** incident capture, telemetry correlation, root cause analysis, replay bundles, edge agent data collection.
 
-## 8. Security defaults
+**Out of scope:** fleet orchestration, teleoperation, OTA updates, digital twin, simulation, general DevOps tooling, real-time video.
 
-- JWT secret must come from env var (`JWT_SECRET_KEY`) — never hardcode
-- `ANTHROPIC_API_KEY` is optional and never logged
-- Demo password `demo123` is acceptable for seeded demo data only
-- All secrets injected via Render env vars, never in source
+## 9. JSONB for evolving structures
 
-## 9. Monorepo discipline
+Use JSONB (`analysis_json`, `metadata_json`, `labels_json`) for fields whose schema is still stabilizing. Normalize into proper columns only when the shape is proven stable.
 
-Each `apps/` service is independently buildable and deployable. Don't import across `apps/` boundaries. Agents in `agents/` talk to the API via HTTP only — no direct DB access.
+## 10. Migrations before any schema change on live data
 
-## 10. Agent protocol
+`alembic/` is set up but has no migration files. Before the first production write and before any schema change, initialize `alembic revision --autogenerate`. `create_all` is fine for dev only.
 
-Edge agents communicate with the API via:
-- `POST /api/v1/devices/register` — on startup
-- `POST /api/v1/ingest/metrics` — batch: `{metrics: [{...}]}`
-- `POST /api/v1/ingest/logs` — batch: `{logs: [{...}]}`
-- `POST /api/v1/devices/heartbeat/{device_id}` — keep-alive
+## 11. Monorepo service boundaries via HTTP only
 
-No other API surface is accessible to agents. Auth for agents: device_id (no JWT for agents in MVP).
+Agents in `agents/` communicate with the API via HTTP — never direct DB access. Apps in `apps/` never import from each other. `packages/` can be imported by any `apps/` service.
+
+## 12. Secrets only via environment variables
+
+`JWT_SECRET_KEY` and `ANTHROPIC_API_KEY` come from env vars only. Never hardcode. The defaults in `config.py` are clearly labelled placeholders for local dev only.

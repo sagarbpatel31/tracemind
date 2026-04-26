@@ -1,56 +1,91 @@
-# TraceMind — Claude Code Context
+# TraceMind — Claude Code Bootstrap
 
-## What this is
-Incident intelligence platform for ROS2 and edge AI robots. FastAPI backend + Next.js frontend + Go/Python edge agents. Monorepo.
+## ⚠️ READ BEFORE CODING
 
-## Start here
-- `.ai/architecture.md` — system topology, data flow, all models and routes
-- `.ai/handoff.md` — current state, what's done, what's pending
-- `.ai/failure_patterns.md` — known bugs and fixes (read before debugging anything)
-- `.ai/decisions.md` — why key tech choices were made
+You MUST read these files before writing any production code in this session:
 
-## Critical rules (do not violate)
-
-1. **shadcn v5 has no `asChild`** — use `<Link className={cn(buttonVariants({...}))}>` instead of `<Button asChild>`
-2. **Use `bcrypt` directly** — never add `passlib`; it breaks on bcrypt 4.x / Python 3.11
-3. **Postgres URL is auto-normalized** — `config.py` rewrites `postgres://` to `postgresql+asyncpg://`; don't manually fix URLs
-4. **Ingest payload format** — agents POST `{metrics: [...]}` not `[...]` flat array
-5. **LLM is optional** — every AI call has a fallback; never make `ANTHROPIC_API_KEY` required
-6. **No production code on `add-ai-engineering-system` branch** — context layer only
-
-## Repo layout
 ```
-apps/api/          FastAPI + SQLAlchemy async + Postgres
-apps/web/          Next.js 16 + shadcn/ui v5
-agents/edge-agent/ Go — system metrics collector
-agents/ros2-collector/ Python — ROS2 topic/node collector
-packages/sample-data/  Seed fixtures + loader script
-deploy/docker-compose/ Local dev stack
-.ai/               AI engineering context (architecture, decisions, debugging, etc.)
+1. .ai/architecture.md      — system topology, all models, all routes
+2. .ai/current_task.md      — what's in progress, what's done, what's blocked
+3. .ai/next_steps.md        — ordered engineering backlog
+4. .ai/failure_patterns.md  — confirmed bugs with exact fixes (read this before debugging anything)
 ```
 
-## Local dev
-```bash
-cd deploy/docker-compose && docker compose up -d
-curl -X POST http://localhost:8000/api/v1/seed/demo
-# login: demo@tracemind.ai / demo123
+Additional context files (read as needed):
 ```
-
-## Tool paths (macOS arm64)
-```
-uv:      /Users/sagarpatel/.local/bin/uv
-graphify: /Users/sagarpatel/.local/bin/uv tool run --from graphifyy graphify
-bun:     /Users/sagarpatel/.bun/bin/bun
-docker:  /Applications/Docker.app/Contents/Resources/bin/docker
+.ai/decisions.md      — why key technical choices were made
+.ai/principles.md     — engineering rules for this repo
+.ai/debugging.md      — per-error-class debugging workflow
+.ai/handoff.md        — concise state summary for resuming after context break
+.ai/prompts.md        — reusable prompts + product LLM prompt templates
+agents/claude.md      — Claude-specific usage rules (hard constraints, tool paths, commit style)
 ```
 
 ---
 
-## graphify
+## Project identity
 
-This project has a graphify knowledge graph at `graphify-out/`.
+TraceMind — incident intelligence for ROS2 and edge AI robots.
+Repo: https://github.com/sagarbpatel31/tracemind
 
-Rules:
-- Before answering architecture or codebase questions, read `graphify-out/GRAPH_REPORT.md` for god nodes and community structure
-- For cross-module "how does X relate to Y" questions, prefer `graphify query "<question>"` over grep
-- After modifying code files, run `graphify update .` to keep the graph current (AST-only, no API cost)
+```
+apps/api/              FastAPI + SQLAlchemy 2.0 async + Postgres (Python 3.11)
+apps/web/              Next.js 16 + shadcn/ui v5 + TypeScript
+agents/edge-agent/     Go — system metrics collector
+agents/ros2-collector/ Python — ROS2 topic/node monitor
+packages/sample-data/  Seed script + fixtures
+deploy/docker-compose/ Local dev stack
+.ai/                   AI engineering context (read before coding)
+```
+
+---
+
+## Non-negotiable rules (memorize these)
+
+| Rule | Detail |
+|------|--------|
+| No passlib | Use `import bcrypt` directly — passlib breaks on bcrypt 4.x / Python 3.11 |
+| No `asChild` on Button | shadcn v5 doesn't have it — use `buttonVariants()` spread on Link |
+| Ingest format | `{metrics:[...]}` not `[...]` — all three agents depend on this |
+| LLM fallback required | Every LLM call returns rules text / default if `ANTHROPIC_API_KEY` is empty |
+| No hardcoded secrets | JWT key and Anthropic key via env vars only |
+| URL normalization | `config.py` handles `postgres://` → `postgresql+asyncpg://` automatically — never manually edit |
+
+---
+
+## Local dev
+
+```bash
+cd deploy/docker-compose
+/Applications/Docker.app/Contents/Resources/bin/docker compose up -d
+curl -X POST http://localhost:8000/api/v1/seed/demo
+# open http://localhost:3000  →  demo@tracemind.ai / demo123
+# open http://localhost:8000/docs  →  Swagger
+```
+
+---
+
+## Tool paths (macOS arm64)
+
+```bash
+uv:       /Users/sagarpatel/.local/bin/uv
+graphify: /Users/sagarpatel/.local/bin/uv tool run --from graphifyy graphify
+bun:      /Users/sagarpatel/.bun/bin/bun
+docker:   /Applications/Docker.app/Contents/Resources/bin/docker
+```
+
+---
+
+## graphify (knowledge graph)
+
+Before answering architecture questions, query the graph instead of re-reading source files:
+
+```bash
+graphify query "how does incident analysis work"
+graphify path "analyze_incident" "generate_llm_summary"
+graphify explain "MetricPoint"
+```
+
+After modifying code: `graphify update .` (AST-only, no API cost, rebuilds in <1s)
+
+Graph report: `graphify-out/GRAPH_REPORT.md` — read for community structure and god nodes.
