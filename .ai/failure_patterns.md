@@ -1,154 +1,137 @@
 # Failure Patterns
 
-Confirmed bugs encountered during this build, with exact symptoms and fixes. Read before debugging.
+Confirmed bugs hit during this build, plus known risks not yet triggered. Read before debugging anything.
 
 ---
 
-## 1. passlib + bcrypt 4.x incompatibility (FIXED)
+## FIXED — bugs already resolved
 
-**Symptom:** `ValueError: password cannot be longer than 72 bytes, truncate manually` on any login attempt, even 4-char passwords.
+### F1. passlib + bcrypt 4.x incompatibility
 
-**Root cause:** passlib's bcrypt wrapper calls internal API changed in bcrypt 4.x. Passlib unmaintained against it.
-
-**Fix:** Removed `passlib[bcrypt]`. Uses `import bcrypt` directly:
-```python
-bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt())
-bcrypt.checkpw(plain.encode("utf-8"), hashed.encode("utf-8"))
-```
+**Symptom:** `ValueError: password cannot be longer than 72 bytes` on any login, even 4-char passwords.
+**Root cause:** passlib's internal bcrypt API call broke with bcrypt>=4.x. Passlib unmaintained.
+**Fix:** Removed passlib. Direct `import bcrypt` + `bcrypt.hashpw()` / `bcrypt.checkpw()`.
 **Files:** `apps/api/app/security.py`, `apps/api/pyproject.toml`
 
 ---
 
-## 2. shadcn v5 `asChild` TypeScript error (FIXED)
+### F2. shadcn v5 `asChild` TypeScript build failure
 
-**Symptom:** `Property 'asChild' does not exist on type 'ButtonHTMLAttributes<HTMLButtonElement>'` — TypeScript build fails.
-
-**Root cause:** shadcn/ui v5 (base-ui variant) removed the Radix `asChild` prop from Button.
-
+**Symptom:** `Property 'asChild' does not exist on type 'ButtonHTMLAttributes<HTMLButtonElement>'`
+**Root cause:** shadcn/ui v5 (base-ui) removed Radix `asChild` prop from Button.
 **Fix:**
 ```tsx
-// WRONG
-<Button asChild><Link href="/x">text</Link></Button>
-
-// CORRECT
-import { buttonVariants } from "@/components/ui/button"
+// WRONG: <Button asChild><Link href="/x">text</Link></Button>
+// CORRECT:
 <Link href="/x" className={cn(buttonVariants({ variant: "default" }))}>text</Link>
 ```
-**Files:** Any page with link-styled-as-button — `apps/web/src/app/`
 
 ---
 
-## 3. apps/web committed as git submodule (FIXED)
+### F3. apps/web committed as git submodule
 
-**Symptom:** `git status` shows `apps/web` as `160000` (submodule mode). Files inside not staged.
-
-**Root cause:** `create-next-app` created `.git/` inside `apps/web/`, making git treat it as a submodule.
-
-**Fix:**
-```bash
-rm -rf apps/web/.git
-git rm --cached apps/web
-git add apps/web/
-```
+**Symptom:** `git status` shows `apps/web` as mode `160000`. Files inside not stageable.
+**Root cause:** `create-next-app` created its own `.git/` inside `apps/web/`.
+**Fix:** `rm -rf apps/web/.git && git rm --cached apps/web && git add apps/web/`
 
 ---
 
-## 4. Edge agent payload format mismatch (FIXED)
+### F4. Edge agent payload format mismatch → 422
 
 **Symptom:** API returns `422 Unprocessable Entity` when agent POSTs metrics.
-
-**Root cause:** Agent was sending flat `[{metric_name, value, ...}]`. API expects `{metrics: [{...}]}` wrapper.
-
-**Fix:** `agents/edge-agent/internal/sender/http.go` wraps payload:
-```go
-payload := map[string]interface{}{"metrics": metricsArray}
-```
+**Root cause:** Agent sent flat `[{...}]`. API ingest schema expects `{metrics: [{...}]}`.
+**Fix:** Updated `agents/edge-agent/internal/sender/http.go` to wrap payload in object.
 
 ---
 
-## 5. Missing DB columns after model change (FIXED)
+### F5. Missing DB columns after model change
 
 **Symptom:** `asyncpg.exceptions.UndefinedColumnError: column users.password_hash does not exist`
-
-**Root cause:** `create_all` only creates new tables, not new columns on existing tables. `users` table existed before `password_hash` / `is_active` were added to the model.
-
+**Root cause:** `create_all` creates tables but does not add columns to existing tables.
 **Fix (dev workaround):**
 ```sql
 ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255) DEFAULT '';
 ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
 ```
-**Permanent fix:** Initialize and run Alembic migrations before any schema change on a live DB.
+**Permanent fix:** Priority 2 — initialize Alembic migrations.
 
 ---
 
-## 6. Seed endpoint UniqueViolationError on re-seed (KNOWN)
+### F6. Seed UniqueViolationError on re-seed
 
-**Symptom:** `POST /api/v1/seed/demo` returns 500 after first run.
-
-**Root cause:** Seed inserts rows that already exist; not fully idempotent.
-
-**Workaround:**
+**Symptom:** `POST /seed/demo` returns 500 after first run. UniqueViolationError on device_name or email.
+**Fix (dev):**
 ```sql
 TRUNCATE users, workspaces, projects, devices, deployments, incidents,
   event_logs, metric_points, incident_artifacts, annotations CASCADE;
 ```
-Then re-run seed. Safe on dev/staging, never on prod with real data.
+Then re-run: `curl -X POST http://localhost:8000/api/v1/seed/demo`
 
 ---
 
-## 7. Docker not in PATH (KNOWN ENVIRONMENT)
-
-**Symptom:** `command not found: docker` even with Docker Desktop running.
-
-**Fix:** Use full path:
-```bash
-/Applications/Docker.app/Contents/Resources/bin/docker compose up
-```
-
----
-
-## 8. Port 3000 conflict (docker web vs preview server)
-
-**Symptom:** Claude Code preview server fails: "Port 3000 is required but is in use."
-
-**Root cause:** Docker Compose web service binds host:3000.
-
-**Fix:**
-```bash
-docker stop tracemind-web-1
-# or change docker-compose.yml web port to 3001:3000
-```
-
----
-
-## 9. `postgres://` URL rejected by SQLAlchemy/asyncpg (FIXED)
+### F7. postgres:// URL rejected by SQLAlchemy
 
 **Symptom:** `sqlalchemy.exc.ArgumentError: Could not parse rfc1738 URL from string 'postgres://...'`
-
-**Root cause:** Supabase/Render emit `postgres://`. SQLAlchemy+asyncpg requires `postgresql+asyncpg://`.
-
-**Fix:** Already auto-handled by `normalize_postgres_url()` in `app/config.py`. Do not manually edit URLs.
+**Fix:** Already handled automatically. `config.py:normalize_postgres_url()` rewrites it. Do not manually edit cloud URIs.
 
 ---
 
-## 10. uv not in PATH (KNOWN ENVIRONMENT)
+### F8. Docker not in PATH
+
+**Symptom:** `command not found: docker` even with Docker Desktop running.
+**Fix:** `/Applications/Docker.app/Contents/Resources/bin/docker`
+
+---
+
+### F9. Port 3000 conflict (Docker web vs preview server)
+
+**Symptom:** Preview server fails: "Port 3000 is required but is in use."
+**Fix:** `docker stop tracemind-web-1` — or change Docker Compose web port to `3001:3000`.
+
+---
+
+### F10. uv not in PATH
 
 **Symptom:** `command not found: uv`
-
-**Fix:** Full path: `/Users/sagarpatel/.local/bin/uv`
+**Fix:** `/Users/sagarpatel/.local/bin/uv`
 
 ---
 
-## Known risks (not yet hit, but likely)
+## KNOWN RISKS — not yet triggered, likely in near future
 
-### R1. Schema change on live Supabase DB
-`create_all` will not add columns or modify types. Any model change after first deploy requires manual `ALTER TABLE` or Alembic migration. **High risk once production is live.**
+### R1. 🔴 Schema change on live Supabase DB (HIGH)
 
-### R2. Render cold start timeouts
-First request after 15 min idle takes ~60s. If frontend sets a short API timeout, the first load will fail silently. Frontend should handle loading states generously.
+**Risk:** Any new column added to a SQLAlchemy model will not appear in the Supabase DB — `create_all` skips existing tables. First request touching that column returns 500.
+**Trigger:** After Priority 1 deploy, any feature requiring a new column.
+**Mitigation:** Priority 2 — initialize Alembic and generate initial migration immediately after first successful deploy. Do not land any model change before this.
 
-### R3. Supabase pause
-Free tier pauses DB after 1 week of inactivity. First request after pause succeeds but with ~30s latency. Consider a health-check ping cron if the app needs to stay responsive.
+---
 
-### R4. Ingest without auth
-`/ingest/*` routes accept any caller with a known device_id. If the repo is public and a device_id leaks, anyone can inject telemetry. Add device API tokens before exposing to untrusted networks.
+### R2. 🟠 Render cold start causes first-load failure
+
+**Risk:** Render free tier spins down after 15 min idle. First request takes ~60s. If frontend has a short API timeout, the page appears broken.
+**Trigger:** Any user visiting `tracemind.vercel.app` after a period of inactivity.
+**Mitigation:** Frontend should show a loading state for ≥90s on first load, not a generic error. Or: add a UptimeRobot/cron ping to prevent spin-down.
+
+---
+
+### R3. 🟠 Telemetry injection via unauthenticated ingest
+
+**Risk:** `/ingest/metrics`, `/ingest/logs`, `/ingest/events` require no auth. Any caller with a known device UUID can inject arbitrary metric values that trigger analysis rules.
+**Trigger:** Repo is public. Device UUIDs visible in seed data or API responses.
+**Mitigation:** Priority 3 — add device-scoped API token header (`X-Device-Token`).
+
+---
+
+### R4. 🟠 Simulated metrics trigger false analysis results on real hardware
+
+**Risk:** Edge agent sends fake CPU/disk/network values. Rules engine may trigger `Resource contention` (cpu > 85%) or other rules on fabricated data.
+**Trigger:** Deploying the Go agent to a real Jetson device.
+**Mitigation:** Priority 4 — replace stubs with real `/proc` reads before any hardware deployment.
+
+---
+
+### R5. 🟡 Supabase DB pause breaks first load
+
+**Risk:** Supabase free tier pauses DB after 1 week of inactivity. Resume takes ~30s. FastAPI lifespan `create_all` call may timeout or throw during pause/resume window.
+**Mitigation:** Health check retry logic in frontend. Or: add a simple DB ping in the health route to verify connectivity.
