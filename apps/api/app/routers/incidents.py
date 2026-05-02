@@ -4,11 +4,10 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.database import get_db
-from app.models.device import Device, Deployment
-from app.models.incident import Incident, IncidentArtifact, IncidentStatus
+from app.models.device import Deployment, Device
+from app.models.incident import Incident, IncidentStatus
 from app.models.telemetry import EventLog, MetricPoint
 from app.schemas.incident import (
     IncidentCreate,
@@ -73,9 +72,7 @@ async def list_incidents(
 
 @router.get("/{incident_id}", response_model=IncidentDetailResponse)
 async def get_incident(incident_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(Incident).where(Incident.id == incident_id)
-    )
+    result = await db.execute(select(Incident).where(Incident.id == incident_id))
     incident = result.scalar_one_or_none()
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")
@@ -160,12 +157,8 @@ async def get_incident_metrics(
 
 
 @router.post("/{incident_id}/analyze")
-async def analyze_incident_endpoint(
-    incident_id: uuid.UUID, db: AsyncSession = Depends(get_db)
-):
-    result = await db.execute(
-        select(Incident).where(Incident.id == incident_id)
-    )
+async def analyze_incident_endpoint(incident_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Incident).where(Incident.id == incident_id))
     incident = result.scalar_one_or_none()
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")
@@ -181,12 +174,8 @@ async def analyze_incident_endpoint(
 
 
 @router.post("/{incident_id}/replay-bundle")
-async def create_replay_bundle(
-    incident_id: uuid.UUID, db: AsyncSession = Depends(get_db)
-):
-    result = await db.execute(
-        select(Incident).where(Incident.id == incident_id)
-    )
+async def create_replay_bundle(incident_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Incident).where(Incident.id == incident_id))
     incident = result.scalar_one_or_none()
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")

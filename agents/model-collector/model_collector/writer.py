@@ -6,6 +6,7 @@ Each flush produces one file:
 The file contains a msgpack-serialized list of frame dicts.
 Numpy arrays are serialized as {__ndarray__: true, data: bytes, dtype: str, shape: list}.
 """
+
 from __future__ import annotations
 
 import os

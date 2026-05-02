@@ -3,14 +3,13 @@ import os
 import uuid
 import zipfile
 from datetime import datetime, timezone
-from io import BytesIO
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.models.device import Device, Deployment
-from app.models.incident import Incident, IncidentArtifact, ArtifactType
+from app.models.device import Deployment, Device
+from app.models.incident import ArtifactType, Incident, IncidentArtifact
 from app.models.telemetry import EventLog, MetricPoint
 
 
@@ -34,9 +33,7 @@ async def generate_replay_bundle(incident_id: uuid.UUID, db: AsyncSession) -> st
 
     # Fetch events
     events_result = await db.execute(
-        select(EventLog)
-        .where(EventLog.incident_id == incident_id)
-        .order_by(EventLog.timestamp)
+        select(EventLog).where(EventLog.incident_id == incident_id).order_by(EventLog.timestamp)
     )
     events = events_result.scalars().all()
 

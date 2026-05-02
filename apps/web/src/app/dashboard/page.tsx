@@ -8,11 +8,9 @@ import {
   AlertTriangle,
   ArrowRight,
   CheckCircle,
-  Cpu,
   HardDrive,
   Radio,
   Server,
-  XCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";

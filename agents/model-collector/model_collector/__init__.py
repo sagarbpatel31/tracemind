@@ -10,9 +10,9 @@ Quick start (PyTorch):
     output = model(input_tensor)   # capture is transparent
     collector.flush(incident_id="some-uuid")
 """
+
 from __future__ import annotations
 
-import os
 import uuid
 from typing import Any
 

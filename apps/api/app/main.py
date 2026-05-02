@@ -7,8 +7,7 @@ from fastapi.responses import FileResponse
 from app.config import settings
 from app.database import engine
 from app.models import Base
-from app.routers import auth, devices, health, incidents, ingest, projects, seed
-from app.routers import ai_ingest
+from app.routers import ai_ingest, auth, devices, health, incidents, ingest, projects, seed
 
 
 @asynccontextmanager
@@ -48,9 +47,13 @@ app.include_router(ai_ingest.router, prefix="/api/v1")
 @app.get("/api/v1/bundles/{incident_id}")
 async def download_bundle(incident_id: str):
     import os
-    bundle_path = os.path.join(settings.storage_path, "bundles", f"watchpoint-replay-{incident_id}.zip")
+
+    bundle_path = os.path.join(
+        settings.storage_path, "bundles", f"watchpoint-replay-{incident_id}.zip"
+    )
     if not os.path.exists(bundle_path):
         from fastapi import HTTPException
+
         raise HTTPException(status_code=404, detail="Bundle not found")
     return FileResponse(
         bundle_path,

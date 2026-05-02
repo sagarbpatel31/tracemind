@@ -7,21 +7,20 @@ Routes:
   POST /ingest/inferences       Batch ingest inference frames
   POST /ingest/decisions        Batch ingest policy decisions
 """
+
 from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.ai_layer import Decision, Inference, ModelRun
 from app.schemas.ai_layer import (
     DecisionBatchCreate,
-    DecisionResponse,
     InferenceBatchCreate,
-    InferenceResponse,
     IngestResponse,
     ModelRunCreate,
     ModelRunResponse,

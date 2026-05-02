@@ -5,6 +5,7 @@ incident window. They are the core of Watchpoint's AI failure forensics.
 
 Migration: alembic/versions/0002_ai_layer.py
 """
+
 from __future__ import annotations
 
 import enum
