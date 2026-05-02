@@ -32,9 +32,11 @@ def main() -> None:
     print("Watchpoint model-collector — PyTorch hook demo")
     print("=" * 52)
 
-    # Load pretrained ResNet-18 (downloads ~44MB on first run)
-    print("Loading ResNet-18...")
-    model = models.resnet18(weights=models.ResNet18_Weights.DEFAULT)
+    # Load ResNet-18 with random weights (no download needed — hooks work identically)
+    # Pass weights=None to skip the checkpoint download for offline/demo environments.
+    # Use weights=models.ResNet18_Weights.DEFAULT on a machine with internet access.
+    print("Loading ResNet-18 (random weights — no download)...")
+    model = models.resnet18(weights=None)
     model.eval()
 
     # Set up collector
