@@ -8,6 +8,7 @@ from app.config import settings
 from app.database import engine
 from app.models import Base
 from app.routers import auth, devices, health, incidents, ingest, projects, seed
+from app.routers import ai_ingest
 
 
 @asynccontextmanager
@@ -41,6 +42,7 @@ app.include_router(incidents.router, prefix="/api/v1")
 app.include_router(ingest.router, prefix="/api/v1")
 app.include_router(projects.router, prefix="/api/v1")
 app.include_router(seed.router, prefix="/api/v1")
+app.include_router(ai_ingest.router, prefix="/api/v1")
 
 
 @app.get("/api/v1/bundles/{incident_id}")
