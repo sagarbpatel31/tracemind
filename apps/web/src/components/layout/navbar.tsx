@@ -6,16 +6,16 @@ import { Activity, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getUser, isAuthenticated, logout, type AuthUser } from "@/lib/auth";
 
+type NavState = { mounted: boolean; user: AuthUser | null };
+
 export function Navbar() {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [mounted, setMounted] = useState(false);
+  const [nav, setNav] = useState<NavState>({ mounted: false, user: null });
 
   useEffect(() => {
-    setMounted(true);
-    if (isAuthenticated()) {
-      setUser(getUser());
-    }
+    setNav({ mounted: true, user: isAuthenticated() ? getUser() : null });
   }, []);
+
+  const { mounted, user } = nav;
 
   return (
     <nav className="border-b border-border/40 bg-background/95 backdrop-blur-sm sticky top-0 z-50">

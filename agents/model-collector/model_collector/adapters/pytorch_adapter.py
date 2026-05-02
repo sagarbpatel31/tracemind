@@ -14,6 +14,7 @@ Usage:
     attach_hooks(model, collector, layer_names=["backbone.layer4", "head"])
     output = model(input_tensor)
 """
+
 from __future__ import annotations
 
 import hashlib
@@ -24,7 +25,6 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     # Avoid hard import at module level — torch may not be installed.
-    import torch
     import torch.nn as nn
 
 
@@ -51,7 +51,7 @@ def attach_hooks(
         for h in handles: h.remove()
     """
     try:
-        import torch
+        import torch  # noqa: F401
         import torch.nn as nn  # noqa: F401
     except ImportError as e:
         raise ImportError(

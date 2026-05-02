@@ -6,9 +6,9 @@ Called after flush_to_disk succeeds.  Sends:
 
 All network errors are logged and re-raised — caller decides on retry policy.
 """
+
 from __future__ import annotations
 
-import json
 import logging
 from typing import Any
 

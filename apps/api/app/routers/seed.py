@@ -104,7 +104,9 @@ async def seed_demo_data(db: AsyncSession = Depends(get_db)):
             os_version=d["os"],
             agent_version=d["agent"],
             status=d["status"],
-            last_seen_at=now - timedelta(minutes=5) if d["status"] == DeviceStatus.online else now - timedelta(hours=3),
+            last_seen_at=now - timedelta(minutes=5)
+            if d["status"] == DeviceStatus.online
+            else now - timedelta(hours=3),
             registered_at=now - timedelta(days=7),
         )
         db.add(device)
@@ -143,8 +145,8 @@ async def seed_demo_data(db: AsyncSession = Depends(get_db)):
     db.add(incident1)
 
     # Metrics for incident 1 - 90 seconds of data
-    import math
     import random
+
     random.seed(42)
 
     for sec in range(90):
@@ -169,14 +171,16 @@ async def seed_demo_data(db: AsyncSession = Depends(get_db)):
             ("memory_percent", memory, "%"),
             ("gpu_temp_c", gpu_temp, "C"),
         ]:
-            db.add(MetricPoint(
-                device_id=DEVICE_IDS[0],
-                incident_id=INCIDENT_IDS[0],
-                timestamp=ts,
-                metric_name=name,
-                value=round(value, 2),
-                unit=unit,
-            ))
+            db.add(
+                MetricPoint(
+                    device_id=DEVICE_IDS[0],
+                    incident_id=INCIDENT_IDS[0],
+                    timestamp=ts,
+                    metric_name=name,
+                    value=round(value, 2),
+                    unit=unit,
+                )
+            )
 
     # Events for incident 1
     events_1 = [
@@ -197,14 +201,16 @@ async def seed_demo_data(db: AsyncSession = Depends(get_db)):
         (80, LogLevel.info, "system", "Incident captured - uploading context window"),
     ]
     for offset, level, source, message in events_1:
-        db.add(EventLog(
-            device_id=DEVICE_IDS[0],
-            incident_id=INCIDENT_IDS[0],
-            timestamp=base_time + timedelta(seconds=offset),
-            level=level,
-            source=source,
-            message=message,
-        ))
+        db.add(
+            EventLog(
+                device_id=DEVICE_IDS[0],
+                incident_id=INCIDENT_IDS[0],
+                timestamp=base_time + timedelta(seconds=offset),
+                level=level,
+                source=source,
+                message=message,
+            )
+        )
 
     # --- INCIDENT 2: Thermal throttling ---
     incident2 = Incident(
@@ -234,14 +240,16 @@ async def seed_demo_data(db: AsyncSession = Depends(get_db)):
             ("cpu_percent", cpu, "%"),
             ("topic_rate_hz", topic_rate, "Hz"),
         ]:
-            db.add(MetricPoint(
-                device_id=DEVICE_IDS[0],
-                incident_id=INCIDENT_IDS[1],
-                timestamp=ts,
-                metric_name=name,
-                value=round(value, 2),
-                unit=unit,
-            ))
+            db.add(
+                MetricPoint(
+                    device_id=DEVICE_IDS[0],
+                    incident_id=INCIDENT_IDS[1],
+                    timestamp=ts,
+                    metric_name=name,
+                    value=round(value, 2),
+                    unit=unit,
+                )
+            )
 
     events_2 = [
         (0, LogLevel.info, "thermal", "GPU temperature: 65°C - normal range"),
@@ -256,14 +264,16 @@ async def seed_demo_data(db: AsyncSession = Depends(get_db)):
         (100, LogLevel.info, "system", "Emergency thermal shutdown initiated"),
     ]
     for offset, level, source, message in events_2:
-        db.add(EventLog(
-            device_id=DEVICE_IDS[0],
-            incident_id=INCIDENT_IDS[1],
-            timestamp=t2_base + timedelta(seconds=offset),
-            level=level,
-            source=source,
-            message=message,
-        ))
+        db.add(
+            EventLog(
+                device_id=DEVICE_IDS[0],
+                incident_id=INCIDENT_IDS[1],
+                timestamp=t2_base + timedelta(seconds=offset),
+                level=level,
+                source=source,
+                message=message,
+            )
+        )
 
     # --- INCIDENT 3: Version regression ---
     incident3 = Incident(
@@ -292,34 +302,53 @@ async def seed_demo_data(db: AsyncSession = Depends(get_db)):
             ("inference_latency_ms", latency, "ms"),
             ("topic_rate_hz", topic_rate, "Hz"),
         ]:
-            db.add(MetricPoint(
-                device_id=DEVICE_IDS[2],
-                incident_id=INCIDENT_IDS[2],
-                timestamp=ts,
-                metric_name=name,
-                value=round(value, 2),
-                unit=unit,
-            ))
+            db.add(
+                MetricPoint(
+                    device_id=DEVICE_IDS[2],
+                    incident_id=INCIDENT_IDS[2],
+                    timestamp=ts,
+                    metric_name=name,
+                    value=round(value, 2),
+                    unit=unit,
+                )
+            )
 
     events_3 = [
         (0, LogLevel.info, "deployment", "New deployment warehouse-v2.4.0 active"),
         (5, LogLevel.info, "navigation", "Navigation stack initialized"),
         (10, LogLevel.warn, "navigation", "Path planner latency higher than v2.3.x baseline"),
         (20, LogLevel.warn, "navigation", "Missed 2 waypoints in sequence"),
-        (30, LogLevel.error, "navigation", "Mission abort - could not reach waypoint within timeout"),
-        (35, LogLevel.info, "system", "Config diff detected: planner_hz changed from 20 to 10 in v2.4.0"),
+        (
+            30,
+            LogLevel.error,
+            "navigation",
+            "Mission abort - could not reach waypoint within timeout",
+        ),
+        (
+            35,
+            LogLevel.info,
+            "system",
+            "Config diff detected: planner_hz changed from 20 to 10 in v2.4.0",
+        ),
         (40, LogLevel.warn, "navigation", "v2.4.0 planner frequency is half of v2.3.x"),
-        (50, LogLevel.info, "system", "Incident captured and correlated with deployment version change"),
+        (
+            50,
+            LogLevel.info,
+            "system",
+            "Incident captured and correlated with deployment version change",
+        ),
     ]
     for offset, level, source, message in events_3:
-        db.add(EventLog(
-            device_id=DEVICE_IDS[2],
-            incident_id=INCIDENT_IDS[2],
-            timestamp=t3_base + timedelta(seconds=offset),
-            level=level,
-            source=source,
-            message=message,
-        ))
+        db.add(
+            EventLog(
+                device_id=DEVICE_IDS[2],
+                incident_id=INCIDENT_IDS[2],
+                timestamp=t3_base + timedelta(seconds=offset),
+                level=level,
+                source=source,
+                message=message,
+            )
+        )
 
     await db.commit()
 

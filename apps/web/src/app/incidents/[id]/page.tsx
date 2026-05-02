@@ -9,7 +9,6 @@ import {
   AlertTriangle,
   ArrowLeft,
   Brain,
-  CheckCircle,
   ChevronRight,
   Clock,
   Download,
@@ -17,7 +16,6 @@ import {
   Layers,
   Lightbulb,
   Package,
-  Search,
   Zap,
 } from "lucide-react";
 import {
@@ -42,7 +40,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Separator } from "@/components/ui/separator";
 import { Navbar } from "@/components/layout/navbar";
 import type { AnalysisResult, EventLog, Incident, MetricPoint } from "@/types";
 import { apiFetch, apiUrl } from "@/lib/api-client";

@@ -6,6 +6,7 @@ Design goals:
 - Oldest frames dropped silently when full (ring semantics)
 - Zero external dependencies
 """
+
 from __future__ import annotations
 
 import threading

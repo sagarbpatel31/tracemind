@@ -1,4 +1,5 @@
 """Pydantic schemas for AI layer ingest and query endpoints."""
+
 from __future__ import annotations
 
 import uuid
@@ -6,7 +7,6 @@ from datetime import datetime
 from typing import Any, Optional
 
 from pydantic import BaseModel, Field
-
 
 # ---------------------------------------------------------------------------
 # ModelRun

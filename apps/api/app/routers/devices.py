@@ -6,7 +6,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models.device import Device, Deployment, DeviceStatus
+from app.models.device import Deployment, Device, DeviceStatus
 from app.schemas.device import (
     DeploymentCreate,
     DeploymentResponse,
@@ -45,9 +45,7 @@ async def get_device(device_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/", response_model=list[DeviceResponse])
-async def list_devices(
-    project_id: uuid.UUID | None = None, db: AsyncSession = Depends(get_db)
-):
+async def list_devices(project_id: uuid.UUID | None = None, db: AsyncSession = Depends(get_db)):
     query = select(Device)
     if project_id:
         query = query.where(Device.project_id == project_id)

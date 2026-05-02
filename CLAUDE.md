@@ -2,7 +2,7 @@
 
 > **One-liner:** *AI failure forensics for physical AI. When your robot fails in the field, we tell you why — at the AI layer, not just the logs.*
 >
-> **Repo:** https://github.com/sagarbpatel31/tracemind (public)
+> **Repo:** https://github.com/sagarbpatel31/watchpoint (public)
 
 ---
 
@@ -25,6 +25,17 @@ Additional context:
 .ai/handoff.md        — concise state summary for resuming after context break
 agents/CLAUDE.md      — Claude-specific usage rules (hard constraints, tool paths, commit style)
 ```
+
+---
+
+## Session rules
+
+- Always run `make test` and `make lint` before saying a task is done.
+- When adding a new file, mirror the style and structure of the closest existing
+  file in the same module.
+- If you're uncertain about a design choice, ask before implementing —
+  do not pick silently.
+- Update `CHANGELOG.md` as part of the same commit.
 
 ---
 
