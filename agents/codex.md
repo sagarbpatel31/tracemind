@@ -1,4 +1,4 @@
-# Codex Usage Rules — TraceMind
+# Codex Usage Rules — Watchpoint
 
 These rules apply to all OpenAI Codex / Codex CLI sessions on this repository.
 
@@ -84,7 +84,7 @@ POST /auth/login           → JWT token
 POST /incidents/{id}/analyze      → runs 7 rules + optional LLM
 POST /incidents/{id}/replay-bundle → generates ZIP
 POST /ingest/metrics       → {metrics:[...]}
-POST /seed/demo            → creates demo@tracemind.ai + sample data
+POST /seed/demo            → creates demo@watchpoint.ai + sample data
 ```
 
 ---
@@ -122,6 +122,6 @@ async def my_service(id: uuid.UUID, db: AsyncSession) -> dict:
 
 - `apps/api/app/config.py:normalize_postgres_url()` — do not modify URL normalization logic
 - `apps/api/app/security.py` — auth logic is stable; do not add passlib
-- `apps/web/src/lib/auth.ts` — token storage keys must remain `tracemind_token` / `tracemind_user`
+- `apps/web/src/lib/auth.ts` — token storage keys must remain `watchpoint_token` / `watchpoint_user`
 - `deploy/docker-compose/docker-compose.yml` — do not change port mappings or service names
 - `apps/api/render.yaml` — do not remove or rename env var keys

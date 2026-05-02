@@ -48,7 +48,7 @@ Pydantic schema mismatch. Steps:
 # Get a fresh token
 curl -s -X POST http://localhost:8000/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"demo@tracemind.ai","password":"demo123"}' | python3 -m json.tool
+  -d '{"email":"demo@watchpoint.ai","password":"demo123"}' | python3 -m json.tool
 
 # Use it (replace <token>)
 curl http://localhost:8000/api/v1/incidents/ \

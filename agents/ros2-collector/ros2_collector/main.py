@@ -1,6 +1,6 @@
-"""TraceMind ROS2 Collector entry point.
+"""Watchpoint ROS2 Collector entry point.
 
-Monitors ROS2 topics and nodes, sending telemetry to the TraceMind API.
+Monitors ROS2 topics and nodes, sending telemetry to the Watchpoint API.
 Falls back to simulation mode when rclpy is not available.
 """
 
@@ -13,7 +13,7 @@ import signal
 import sys
 import time
 
-from .sender import TraceMindSender
+from .sender import WatchpointSender
 from .topic_monitor import TopicMonitor
 from .node_inspector import NodeInspector
 
@@ -32,12 +32,12 @@ COLLECTION_INTERVAL_SEC = 5.0
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="TraceMind ROS2 Collector",
+        description="Watchpoint ROS2 Collector",
     )
     parser.add_argument(
         "--api-url",
         default="http://localhost:8000",
-        help="TraceMind API base URL (default: http://localhost:8000)",
+        help="Watchpoint API base URL (default: http://localhost:8000)",
     )
     parser.add_argument(
         "--device-id",
@@ -68,7 +68,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 async def collect_and_send(
     topic_monitor: TopicMonitor,
     node_inspector: NodeInspector,
-    sender: TraceMindSender,
+    sender: WatchpointSender,
     device_id: str,
 ) -> None:
     """Run a single collection cycle: gather data and send to API."""
@@ -139,7 +139,7 @@ async def run_loop(args: argparse.Namespace) -> None:
 
     topic_monitor = TopicMonitor(use_simulation=use_simulation)
     node_inspector = NodeInspector(use_simulation=use_simulation)
-    sender = TraceMindSender(api_url=args.api_url)
+    sender = WatchpointSender(api_url=args.api_url)
 
     shutdown = asyncio.Event()
 

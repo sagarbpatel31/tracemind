@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/tracemind/edge-agent/internal/collector"
+	"github.com/watchpoint/edge-agent/internal/collector"
 )
 
 const demoProjectID = "11111111-1111-1111-1111-111111111111"
 
-// Client sends telemetry data to the TraceMind API.
+// Client sends telemetry data to the Watchpoint API.
 type Client struct {
 	apiURL     string
 	deviceID   string
@@ -32,7 +32,7 @@ func NewClient(apiURL, deviceID, deviceName string) *Client {
 	}
 }
 
-// RegisterDevice registers this device with the TraceMind API.
+// RegisterDevice registers this device with the Watchpoint API.
 func (c *Client) RegisterDevice() error {
 	payload := map[string]string{
 		"project_id":  demoProjectID,

@@ -3,11 +3,11 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    database_url: str = "postgresql+asyncpg://tracemind:tracemind@localhost:5432/tracemind"
+    database_url: str = "postgresql+asyncpg://watchpoint:watchpoint@localhost:5432/watchpoint"
     cors_origins: str = "http://localhost:3000"
     storage_path: str = "./storage"
     api_version: str = "0.1.0"
-    jwt_secret_key: str = "tracemind-dev-secret-change-in-production"
+    jwt_secret_key: str = "watchpoint-dev-secret-change-in-production"
     jwt_algorithm: str = "HS256"
     jwt_expiration_minutes: int = 60
     anthropic_api_key: str = ""  # optional — LLM summary disabled if empty

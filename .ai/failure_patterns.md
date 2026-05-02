@@ -86,7 +86,7 @@ Then re-run: `curl -X POST http://localhost:8000/api/v1/seed/demo`
 ### F9. Port 3000 conflict (Docker web vs preview server)
 
 **Symptom:** Preview server fails: "Port 3000 is required but is in use."
-**Fix:** `docker stop tracemind-web-1` — or change Docker Compose web port to `3001:3000`.
+**Fix:** `docker stop watchpoint-web-1` — or change Docker Compose web port to `3001:3000`.
 
 ---
 
@@ -110,7 +110,7 @@ Then re-run: `curl -X POST http://localhost:8000/api/v1/seed/demo`
 ### R2. 🟠 Render cold start causes first-load failure
 
 **Risk:** Render free tier spins down after 15 min idle. First request takes ~60s. If frontend has a short API timeout, the page appears broken.
-**Trigger:** Any user visiting `tracemind.vercel.app` after a period of inactivity.
+**Trigger:** Any user visiting `watchpoint.vercel.app` after a period of inactivity.
 **Mitigation:** Frontend should show a loading state for ≥90s on first load, not a generic error. Or: add a UptimeRobot/cron ping to prevent spin-down.
 
 ---

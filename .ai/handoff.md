@@ -7,9 +7,9 @@ Last updated: 2026-04-25.
 
 ## Project
 
-- **Name:** TraceMind — incident intelligence for ROS2 and edge AI robots
-- **Repo:** https://github.com/sagarbpatel31/tracemind (public)
-- **Frontend:** https://tracemind.vercel.app (live, not yet wired to prod API)
+- **Name:** Watchpoint — incident intelligence for ROS2 and edge AI robots
+- **Repo:** https://github.com/sagarbpatel31/watchpoint (public)
+- **Frontend:** https://watchpoint.vercel.app (live, not yet wired to prod API)
 
 ---
 
@@ -33,7 +33,7 @@ User provides two URLs, Claude does the rest.
 
 **User actions:**
 1. Sign up Supabase → New project (US East) → Settings → DB → URI → paste here
-2. Sign up Render → New → Blueprint → connect `sagarbpatel31/tracemind` → set `DATABASE_URL` → copy deploy URL → paste here
+2. Sign up Render → New → Blueprint → connect `sagarbpatel31/watchpoint` → set `DATABASE_URL` → copy deploy URL → paste here
 
 **Claude actions (after URLs provided):**
 ```bash
@@ -43,11 +43,11 @@ vercel env add NEXT_PUBLIC_API_URL production  # value: Render deploy URL
 vercel --prod
 
 # Seed
-curl -X POST https://tracemind-api.onrender.com/api/v1/seed/demo
+curl -X POST https://watchpoint-api.onrender.com/api/v1/seed/demo
 
 # Verify
-curl https://tracemind-api.onrender.com/api/v1/health
-# → open https://tracemind.vercel.app → demo@tracemind.ai / demo123
+curl https://watchpoint-api.onrender.com/api/v1/health
+# → open https://watchpoint.vercel.app → demo@watchpoint.ai / demo123
 ```
 
 ---
@@ -67,7 +67,7 @@ curl https://tracemind-api.onrender.com/api/v1/health
 cd deploy/docker-compose
 /Applications/Docker.app/Contents/Resources/bin/docker compose up -d
 curl -X POST http://localhost:8000/api/v1/seed/demo
-open http://localhost:3000   # demo@tracemind.ai / demo123
+open http://localhost:3000   # demo@watchpoint.ai / demo123
 open http://localhost:8000/docs
 ```
 

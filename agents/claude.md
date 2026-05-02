@@ -1,4 +1,4 @@
-# Claude Usage Rules — TraceMind
+# Claude Usage Rules — Watchpoint
 
 These rules apply to all Claude Code sessions on this repository.
 
@@ -96,4 +96,4 @@ EOF
 - General DevOps tooling
 - Real-time video streaming
 
-If asked to build these: redirect to what TraceMind actually does — incident intelligence and reproducibility.
+If asked to build these: redirect to what Watchpoint actually does — incident intelligence and reproducibility.

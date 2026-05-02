@@ -1,4 +1,4 @@
-"""HTTP client for sending telemetry data to the TraceMind API."""
+"""HTTP client for sending telemetry data to the Watchpoint API."""
 
 from __future__ import annotations
 
@@ -13,8 +13,8 @@ DEFAULT_TIMEOUT = 10.0
 MAX_RETRIES = 3
 
 
-class TraceMindSender:
-    """Sends collected ROS2 data to the TraceMind API via HTTP."""
+class WatchpointSender:
+    """Sends collected ROS2 data to the Watchpoint API via HTTP."""
 
     def __init__(
         self,

@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: tracemind-api
+    name: watchpoint-api
     runtime: docker
     region: oregon
     plan: free
@@ -12,7 +12,7 @@ services:
       - key: DATABASE_URL
         sync: false  # set manually in Render dashboard from Supabase
       - key: CORS_ORIGINS
-        value: https://tracemind.vercel.app,http://localhost:3000
+        value: https://watchpoint.vercel.app,http://localhost:3000
       - key: JWT_SECRET_KEY
         generateValue: true  # Render will generate a secure random value
       - key: STORAGE_PATH

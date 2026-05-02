@@ -51,7 +51,7 @@ Decisions visible in the codebase. Read before changing anything they affect.
 
 ## 6. JWT in localStorage (intentional MVP choice)
 
-**File:** `apps/web/src/lib/auth.ts` — keys: `tracemind_token`, `tracemind_user`
+**File:** `apps/web/src/lib/auth.ts` — keys: `watchpoint_token`, `watchpoint_user`
 **Decision:** localStorage-based JWT.
 **Why:** Simplest for Next.js app router MVP. No server-side session infrastructure needed.
 **Tradeoff:** XSS-extractable. Acceptable for internal tool / demo. Priority 5 to fix post-deploy.

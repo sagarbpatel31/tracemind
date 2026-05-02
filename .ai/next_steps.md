@@ -10,31 +10,31 @@ Nothing else matters until the app works for real users. All code is ready.
 
 ### Step A: Provision Supabase (user action, ~5 min)
 1. https://supabase.com → sign up → New project
-2. Name: `tracemind`, region: **US East (N. Virginia)**, strong password
+2. Name: `watchpoint`, region: **US East (N. Virginia)**, strong password
 3. Settings → Database → Connection string → URI tab
 4. Copy URI: `postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres`
 5. Paste to Claude — `config.py` normalizes automatically
 
 ### Step B: Deploy API to Render (user action, ~5 min)
 1. https://render.com → sign up → New → Blueprint
-2. Connect `sagarbpatel31/tracemind` — Render auto-detects `apps/api/render.yaml`
+2. Connect `sagarbpatel31/watchpoint` — Render auto-detects `apps/api/render.yaml`
 3. Set env vars: `DATABASE_URL` (Supabase URI), optionally `ANTHROPIC_API_KEY`
 4. Click Apply → wait for build (~3–5 min)
-5. Copy deploy URL: `https://tracemind-api.onrender.com`
+5. Copy deploy URL: `https://watchpoint-api.onrender.com`
 
 ### Step C: Wire Vercel + seed + smoke test (Claude handles after URLs provided)
 ```bash
 # Set API URL in Vercel
 cd apps/web
-vercel env add NEXT_PUBLIC_API_URL production  # value: https://tracemind-api.onrender.com
+vercel env add NEXT_PUBLIC_API_URL production  # value: https://watchpoint-api.onrender.com
 vercel --prod
 
 # Seed production DB
-curl -X POST https://tracemind-api.onrender.com/api/v1/seed/demo
+curl -X POST https://watchpoint-api.onrender.com/api/v1/seed/demo
 
 # Smoke test
-curl https://tracemind-api.onrender.com/api/v1/health
-# → open https://tracemind.vercel.app → login demo@tracemind.ai / demo123
+curl https://watchpoint-api.onrender.com/api/v1/health
+# → open https://watchpoint.vercel.app → login demo@watchpoint.ai / demo123
 ```
 
 **Blocker:** Steps A and B require user signups. Everything after is automated.

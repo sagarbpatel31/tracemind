@@ -1,8 +1,9 @@
 # Architecture
 
 ## Identity
-TraceMind — incident intelligence for ROS2 and edge AI robots.
-"Sentry for robots": captures field failures, correlates telemetry, generates replayable bundles with AI root-cause analysis.
+Watchpoint — AI failure forensics for physical AI.
+"When your robot fails in the field, we tell you why — at the AI layer, not just the logs."
+Captures system-level telemetry + model-level introspection, generates replayable bundles with AI root-cause analysis.
 
 ---
 
@@ -76,7 +77,7 @@ apps/web (Next.js 16 + shadcn/ui v5)
 | POST | /ingest/logs | {logs:[...]} — **unauthenticated** |
 | POST | /ingest/metrics | {metrics:[...]} — **unauthenticated** |
 | POST | /ingest/events | {events:[...]} — **unauthenticated** |
-| POST | /seed/demo | creates demo@tracemind.ai / demo123 + 3 devices + 3 incidents |
+| POST | /seed/demo | creates demo@watchpoint.ai / demo123 + 3 devices + 3 incidents |
 | GET | /bundles/{incident_id} | FileResponse — ZIP download from storage/bundles/ |
 
 **Models (all use UUIDMixin + TimestampMixin, timezone-aware datetimes):**
@@ -100,10 +101,10 @@ apps/web (Next.js 16 + shadcn/ui v5)
 
 | Setting | Default | Notes |
 |---------|---------|-------|
-| database_url | postgresql+asyncpg://tracemind:tracemind@localhost:5432/tracemind | auto-normalized |
+| database_url | postgresql+asyncpg://watchpoint:watchpoint@localhost:5432/watchpoint | auto-normalized |
 | cors_origins | http://localhost:3000 | comma-separated |
 | storage_path | ./storage | replay bundle root |
-| jwt_secret_key | tracemind-dev-secret-change-in-production | env var in prod |
+| jwt_secret_key | watchpoint-dev-secret-change-in-production | env var in prod |
 | jwt_expiration_minutes | 60 | |
 | anthropic_api_key | "" | optional — LLM disabled if empty |
 
@@ -126,7 +127,7 @@ apps/web (Next.js 16 + shadcn/ui v5)
 After rules: `generate_llm_summary()` — model=claude-haiku-4-5, max_tokens=80, ~120 input tokens. Fallback to rules text if `ANTHROPIC_API_KEY` empty.
 
 **Replay bundle (`app/services/replay_bundle.py`):**
-ZIP at `{storage_path}/bundles/tracemind-replay-{incident_id}.zip`:
+ZIP at `{storage_path}/bundles/watchpoint-replay-{incident_id}.zip`:
 - `metadata.json` · `events.json` · `metrics.json` · `deployment.json` · `analysis_summary.txt`
 - `ros2_snapshot.json` — **placeholder, not populated**
 
@@ -140,7 +141,7 @@ Next.js 16 app router + TypeScript + Tailwind + shadcn/ui v5 (base-ui).
 
 **Pages:** `/` (redirect) · `/login` · `/dashboard` · `/devices/[id]` · `/incidents/[id]`
 
-**Auth:** JWT in `localStorage` (keys: `tracemind_token`, `tracemind_user`). `apiFetch()` auto-injects Bearer. 401 → clear + redirect to /login.
+**Auth:** JWT in `localStorage` (keys: `watchpoint_token`, `watchpoint_user`). `apiFetch()` auto-injects Bearer. 401 → clear + redirect to /login.
 
 **API base:** `NEXT_PUBLIC_API_URL` env var — baked in at build time.
 
@@ -162,7 +163,7 @@ Next.js 16 app router + TypeScript + Tailwind + shadcn/ui v5 (base-ui).
 
 | Layer | Service | Status | Notes |
 |-------|---------|--------|-------|
-| Frontend | Vercel | ✅ Live | https://tracemind.vercel.app — NEXT_PUBLIC_API_URL not yet set to prod |
+| Frontend | Vercel | ✅ Live | https://watchpoint.vercel.app — NEXT_PUBLIC_API_URL not yet set to prod |
 | API | Render (free) | ❌ Not provisioned | render.yaml ready, ~60s cold start |
 | Database | Supabase (free) | ❌ Not provisioned | 500MB limit, pauses after 1 week idle |
 
@@ -175,7 +176,7 @@ cd deploy/docker-compose
 /Applications/Docker.app/Contents/Resources/bin/docker compose up -d
 # postgres:5432  api:8000  web:3000
 curl -X POST http://localhost:8000/api/v1/seed/demo
-open http://localhost:3000      # demo@tracemind.ai / demo123
+open http://localhost:3000      # demo@watchpoint.ai / demo123
 open http://localhost:8000/docs # Swagger
 ```
 

@@ -1,4 +1,4 @@
-# TraceMind — AI Agent Bootstrap
+# Watchpoint — AI Agent Bootstrap
 
 ## ⚠️ READ BEFORE CODING
 
@@ -21,9 +21,9 @@ agents/codex.md    — Codex constraints, stack facts, pattern reference
 
 ## Project
 
-TraceMind — incident intelligence for ROS2 and edge AI robots.
-Repo: github.com/sagarbpatel31/tracemind (public)
-Frontend: https://tracemind.vercel.app
+Watchpoint — incident intelligence for ROS2 and edge AI robots.
+Repo: github.com/sagarbpatel31/watchpoint (public)
+Frontend: https://watchpoint.vercel.app
 
 ---
 
@@ -93,7 +93,7 @@ POST /ingest/events    {events: [...]}
 GET  /projects/{id}
 GET  /projects/{id}/summary
 
-POST /seed/demo        creates demo@tracemind.ai / demo123 + 3 devices + 3 incidents
+POST /seed/demo        creates demo@watchpoint.ai / demo123 + 3 devices + 3 incidents
 ```
 
 ---
@@ -122,5 +122,5 @@ Fallback if no rules match: `"Unknown — manual investigation needed"` (confide
 cd deploy/docker-compose && docker compose up -d
 curl -X POST http://localhost:8000/api/v1/seed/demo
 # api: http://localhost:8000/docs
-# web: http://localhost:3000  (demo@tracemind.ai / demo123)
+# web: http://localhost:3000  (demo@watchpoint.ai / demo123)
 ```

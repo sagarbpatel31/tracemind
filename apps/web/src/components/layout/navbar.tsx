@@ -25,7 +25,7 @@ export function Navbar() {
             <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
               <Activity className="w-4 h-4 text-primary-foreground" />
             </div>
-            <span className="font-bold tracking-tight">TraceMind</span>
+            <span className="font-bold tracking-tight">Watchpoint</span>
           </Link>
           <div className="flex items-center gap-4 text-sm">
             <Link

@@ -33,8 +33,8 @@ See `.ai/next_steps.md` for the exact steps. All code is ready; this is purely a
 | Next.js frontend (dashboard, incidents, login) | `apps/web/src/` |
 | Docker Compose local dev stack | `deploy/docker-compose/` |
 | Render IaC | `apps/api/render.yaml` |
-| Vercel frontend deployed | https://tracemind.vercel.app |
-| GitHub repo public | https://github.com/sagarbpatel31/tracemind |
+| Vercel frontend deployed | https://watchpoint.vercel.app |
+| GitHub repo public | https://github.com/sagarbpatel31/watchpoint |
 | Graphify knowledge graph | `graphify-out/` (git-ignored, rebuilds on commit) |
 | claude-mem session memory | worker on `127.0.0.1:37701` |
 | caveman dev tooling | `.agents/skills/` |

@@ -46,7 +46,7 @@ async def seed_demo_data(db: AsyncSession = Depends(get_db)):
     # User
     user = User(
         id=USER_ID,
-        email="demo@tracemind.ai",
+        email="demo@watchpoint.ai",
         name="Demo User",
         password_hash=hash_password("demo123"),
     )
@@ -54,7 +54,7 @@ async def seed_demo_data(db: AsyncSession = Depends(get_db)):
 
     # Workspace
     workspace = Workspace(
-        id=WORKSPACE_ID, name="TraceMind Demo", slug="tracemind-demo", owner_id=USER_ID
+        id=WORKSPACE_ID, name="Watchpoint Demo", slug="watchpoint-demo", owner_id=USER_ID
     )
     db.add(workspace)
 
