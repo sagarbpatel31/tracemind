@@ -1,5 +1,5 @@
-const TOKEN_KEY = "tracemind_token";
-const USER_KEY = "tracemind_user";
+const TOKEN_KEY = "watchpoint_token";
+const USER_KEY = "watchpoint_user";
 
 export interface AuthUser {
   id: string;

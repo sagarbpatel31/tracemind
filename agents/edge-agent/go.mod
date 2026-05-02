@@ -1,3 +1,3 @@
-module github.com/tracemind/edge-agent
+module github.com/watchpoint/edge-agent
 
 go 1.22

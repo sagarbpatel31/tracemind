@@ -38,3 +38,6 @@ agents/edge-agent/tracemind-agent
 
 # Personal Claude Code harness config (not project files)
 .claude/
+
+# Graphify knowledge graph (auto-generated, rebuild with /graphify .)
+graphify-out/

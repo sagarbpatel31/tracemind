@@ -111,7 +111,7 @@ class NodeInspector:
                 import rclpy
                 from rclpy.node import Node
 
-                self._ros_node = rclpy.create_node("tracemind_node_inspector")
+                self._ros_node = rclpy.create_node("watchpoint_node_inspector")
                 logger.info("Created ROS2 node for node inspection")
             except Exception:
                 logger.exception("Failed to create ROS2 node, falling back to simulation")

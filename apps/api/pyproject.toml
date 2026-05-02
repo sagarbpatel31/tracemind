@@ -1,7 +1,7 @@
 [project]
-name = "tracemind-api"
+name = "watchpoint-api"
 version = "0.1.0"
-description = "TraceMind API — incident analysis for ROS2 and edge AI systems"
+description = "Watchpoint API — AI failure forensics for physical AI systems"
 requires-python = ">=3.11"
 dependencies = [
     "fastapi>=0.115",

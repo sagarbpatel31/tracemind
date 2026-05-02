@@ -69,7 +69,7 @@ export default function LoginPage() {
           <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
             <Activity className="w-5 h-5 text-primary-foreground" />
           </div>
-          <span className="text-lg font-bold tracking-tight">TraceMind</span>
+          <span className="text-lg font-bold tracking-tight">Watchpoint</span>
         </div>
 
         <Card>
@@ -80,7 +80,7 @@ export default function LoginPage() {
             <p className="text-sm text-muted-foreground">
               {isRegister
                 ? "Sign up to start monitoring your robots"
-                : "Sign in to your TraceMind dashboard"}
+                : "Sign in to your Watchpoint dashboard"}
             </p>
           </CardHeader>
           <CardContent>
@@ -173,7 +173,7 @@ export default function LoginPage() {
             {/* Demo credentials hint */}
             <div className="mt-6 pt-4 border-t border-border/40 text-center">
               <p className="text-xs text-muted-foreground">
-                Demo: <span className="font-mono">demo@tracemind.ai</span> /{" "}
+                Demo: <span className="font-mono">demo@watchpoint.ai</span> /{" "}
                 <span className="font-mono">demo123</span>
               </p>
             </div>

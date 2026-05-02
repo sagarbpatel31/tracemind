@@ -40,7 +40,7 @@ class TopicMonitor:
                 import rclpy
                 from rclpy.node import Node
 
-                self._ros_node = rclpy.create_node("tracemind_topic_monitor")
+                self._ros_node = rclpy.create_node("watchpoint_topic_monitor")
                 logger.info("Created ROS2 node for topic monitoring")
             except Exception:
                 logger.exception("Failed to create ROS2 node, falling back to simulation")

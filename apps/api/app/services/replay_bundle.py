@@ -102,7 +102,7 @@ async def generate_replay_bundle(incident_id: uuid.UUID, db: AsyncSession) -> st
     # Create zip bundle
     storage_dir = os.path.join(settings.storage_path, "bundles")
     os.makedirs(storage_dir, exist_ok=True)
-    bundle_filename = f"tracemind-replay-{incident_id}.zip"
+    bundle_filename = f"watchpoint-replay-{incident_id}.zip"
     bundle_path = os.path.join(storage_dir, bundle_filename)
 
     with zipfile.ZipFile(bundle_path, "w", zipfile.ZIP_DEFLATED) as zf:

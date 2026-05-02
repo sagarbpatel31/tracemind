@@ -10,15 +10,15 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/tracemind/edge-agent/internal/collector"
-	"github.com/tracemind/edge-agent/internal/config"
-	"github.com/tracemind/edge-agent/internal/sender"
+	"github.com/watchpoint/edge-agent/internal/collector"
+	"github.com/watchpoint/edge-agent/internal/config"
+	"github.com/watchpoint/edge-agent/internal/sender"
 )
 
 func main() {
 	cfg := parseFlags()
 
-	log.Printf("TraceMind edge-agent starting (device=%s, interval=%s, api=%s)",
+	log.Printf("Watchpoint edge-agent starting (device=%s, interval=%s, api=%s)",
 		cfg.DeviceID, cfg.CollectionInterval, cfg.APIURL)
 
 	client := sender.NewClient(cfg.APIURL, cfg.DeviceID, cfg.DeviceName)
@@ -59,7 +59,7 @@ func main() {
 }
 
 func parseFlags() config.Config {
-	apiURL := flag.String("api-url", "http://localhost:8000", "TraceMind API base URL")
+	apiURL := flag.String("api-url", "http://localhost:8000", "Watchpoint API base URL")
 	deviceID := flag.String("device-id", "", "Unique device identifier")
 	deviceName := flag.String("device-name", "", "Human-readable device name")
 	interval := flag.Duration("interval", 5*time.Second, "Metrics collection interval")
