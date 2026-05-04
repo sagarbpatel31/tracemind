@@ -141,6 +141,24 @@ class OODSignalResponse(BaseModel):
 
 
 # ---------------------------------------------------------------------------
+# Query responses
+# ---------------------------------------------------------------------------
+
+
+class InferenceListResponse(BaseModel):
+    inferences: list[InferenceResponse]
+    total: int
+
+
+class AttentionResponse(BaseModel):
+    inference_id: uuid.UUID
+    attention_ref: Optional[str]
+    layer_name: Optional[str]
+    # "available" — attention_ref set; "unavailable" — not computed yet
+    status: str
+
+
+# ---------------------------------------------------------------------------
 # Generic ingest response
 # ---------------------------------------------------------------------------
 

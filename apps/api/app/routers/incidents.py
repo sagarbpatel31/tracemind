@@ -6,9 +6,11 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
+from app.models.ai_layer import Inference
 from app.models.device import Deployment, Device
 from app.models.incident import Incident, IncidentStatus
 from app.models.telemetry import EventLog, MetricPoint
+from app.schemas.ai_layer import InferenceListResponse, InferenceResponse
 from app.schemas.incident import (
     IncidentCreate,
     IncidentDetailResponse,
@@ -154,6 +156,24 @@ async def get_incident_metrics(
         }
         for m in metrics
     ]
+
+
+@router.get("/{incident_id}/inferences", response_model=InferenceListResponse)
+async def list_incident_inferences(
+    incident_id: uuid.UUID,
+    limit: int = 200,
+    db: AsyncSession = Depends(get_db),
+):
+    """List all inference frames linked to an incident, ordered by timestamp."""
+    result = await db.execute(
+        select(Inference)
+        .where(Inference.incident_id == incident_id)
+        .order_by(Inference.timestamp_ns)
+        .limit(limit)
+    )
+    inferences = result.scalars().all()
+    rows = [InferenceResponse.model_validate(i) for i in inferences]
+    return InferenceListResponse(inferences=rows, total=len(rows))
 
 
 @router.post("/{incident_id}/analyze")
