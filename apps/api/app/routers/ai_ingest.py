@@ -1,11 +1,10 @@
-"""AI layer ingest endpoints.
+"""AI layer ingest and query endpoints.
 
 Unauthenticated (same policy as /ingest/* routes) — Priority 3 to add auth.
 
-Routes:
-  POST /ingest/model-runs       Register a model run from the model-collector agent
-  POST /ingest/inferences       Batch ingest inference frames
-  POST /ingest/decisions        Batch ingest policy decisions
+Routers:
+  router             — POST /ingest/model-runs, /ingest/inferences, /ingest/decisions
+  inferences_router  — GET /inferences/{id}, GET /inferences/{id}/attention
 """
 
 from __future__ import annotations
@@ -13,20 +12,24 @@ from __future__ import annotations
 import uuid
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
 from app.models.ai_layer import Decision, Inference, ModelRun
 from app.schemas.ai_layer import (
+    AttentionResponse,
     DecisionBatchCreate,
     InferenceBatchCreate,
+    InferenceResponse,
     IngestResponse,
     ModelRunCreate,
     ModelRunResponse,
 )
 
 router = APIRouter(prefix="/ingest", tags=["ai-ingest"])
+inferences_router = APIRouter(prefix="/inferences", tags=["ai-inferences"])
 
 
 # ---------------------------------------------------------------------------
@@ -143,3 +146,50 @@ async def ingest_decisions(
     db.add_all(rows)
     await db.commit()
     return IngestResponse(created=len(rows))
+
+
+# ---------------------------------------------------------------------------
+# Single-inference query (inferences_router — prefix /inferences)
+# ---------------------------------------------------------------------------
+
+
+@inferences_router.get(
+    "/{inference_id}",
+    response_model=InferenceResponse,
+    summary="Get a single inference frame",
+)
+async def get_inference(
+    inference_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+) -> InferenceResponse:
+    result = await db.execute(select(Inference).where(Inference.id == inference_id))
+    inf = result.scalar_one_or_none()
+    if not inf:
+        raise HTTPException(status_code=404, detail="Inference not found")
+    return InferenceResponse.model_validate(inf)
+
+
+@inferences_router.get(
+    "/{inference_id}/attention",
+    response_model=AttentionResponse,
+    summary="Get attention / saliency metadata for an inference",
+    description=(
+        "Returns the attention map reference (S3 key) if Grad-CAM has been computed. "
+        "Status is 'available' when attention_ref is set, 'unavailable' otherwise. "
+        "Grad-CAM computation is implemented in Week 3."
+    ),
+)
+async def get_inference_attention(
+    inference_id: uuid.UUID,
+    db: AsyncSession = Depends(get_db),
+) -> AttentionResponse:
+    result = await db.execute(select(Inference).where(Inference.id == inference_id))
+    inf = result.scalar_one_or_none()
+    if not inf:
+        raise HTTPException(status_code=404, detail="Inference not found")
+    return AttentionResponse(
+        inference_id=inf.id,
+        attention_ref=inf.attention_ref,
+        layer_name=inf.layer_name,
+        status="available" if inf.attention_ref else "unavailable",
+    )

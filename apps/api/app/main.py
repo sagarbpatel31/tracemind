@@ -42,6 +42,7 @@ app.include_router(ingest.router, prefix="/api/v1")
 app.include_router(projects.router, prefix="/api/v1")
 app.include_router(seed.router, prefix="/api/v1")
 app.include_router(ai_ingest.router, prefix="/api/v1")
+app.include_router(ai_ingest.inferences_router, prefix="/api/v1")
 
 
 @app.get("/api/v1/bundles/{incident_id}")
