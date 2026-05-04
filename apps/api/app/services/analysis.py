@@ -6,6 +6,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.models.telemetry import EventLog, MetricPoint
+from app.rca.ai_rules import RuleAI001, RuleAI002
+
+_AI_RULES = [RuleAI001(), RuleAI002()]
 
 
 async def generate_llm_summary(
@@ -266,6 +269,21 @@ async def analyze_incident(
                 "description": f"{len(error_events)} error/fatal log entries during incident",
             }
         )
+
+    # AI layer rules (AI-001, AI-002, ...)
+    # These query the inference / OOD tables and append findings in the same format.
+    for ai_rule in _AI_RULES:
+        finding = await ai_rule.evaluate(incident_id, db)
+        if finding:
+            probable_causes.append(
+                {
+                    "cause": finding["cause"],
+                    "confidence": finding["confidence"],
+                    "description": finding["description"],
+                }
+            )
+            evidence.extend(finding.get("evidence", []))
+            suggested_steps.extend(finding.get("suggested_steps", []))
 
     # Fallback if no rules matched
     if not probable_causes:

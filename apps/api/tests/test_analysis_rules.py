@@ -37,7 +37,14 @@ def _event(message: str, level: LogLevel = LogLevel.info) -> EventLog:
 
 
 def _mock_db(metrics: list[MetricPoint], events: list[EventLog]) -> AsyncMock:
-    """Return an AsyncSession mock that yields the given metrics and events."""
+    """Return an AsyncSession mock that yields the given metrics and events.
+
+    Call order expected by analyze_incident:
+      1. metrics   (Rule 1–7 system rules)
+      2. events    (Rule 1–7 system rules)
+      3. inferences (RuleAI001._get_inferences)
+      4. ood_signals (RuleAI002._get_ood_signals)
+    """
     db = AsyncMock()
 
     metrics_result = MagicMock()
@@ -46,8 +53,13 @@ def _mock_db(metrics: list[MetricPoint], events: list[EventLog]) -> AsyncMock:
     events_result = MagicMock()
     events_result.scalars.return_value.all.return_value = events
 
-    # first call → metrics, second → events
-    db.execute = AsyncMock(side_effect=[metrics_result, events_result])
+    # AI rules receive empty data — they should not fire in system-rule tests
+    empty_result = MagicMock()
+    empty_result.scalars.return_value.all.return_value = []
+
+    db.execute = AsyncMock(
+        side_effect=[metrics_result, events_result, empty_result, empty_result]
+    )
     return db
 
 
