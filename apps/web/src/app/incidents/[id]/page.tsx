@@ -40,8 +40,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { InferenceTimeline } from "@/components/ai/InferenceTimeline";
 import { Navbar } from "@/components/layout/navbar";
 import type { AnalysisResult, EventLog, Incident, MetricPoint } from "@/types";
+import type { Inference, InferenceListResponse } from "@/types/ai_layer";
 import { apiFetch, apiUrl } from "@/lib/api-client";
 
 export default function IncidentDetailPage() {
@@ -51,6 +53,7 @@ export default function IncidentDetailPage() {
   const [incident, setIncident] = useState<Incident | null>(null);
   const [events, setEvents] = useState<EventLog[]>([]);
   const [metrics, setMetrics] = useState<MetricPoint[]>([]);
+  const [inferences, setInferences] = useState<Inference[]>([]);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
@@ -58,14 +61,16 @@ export default function IncidentDetailPage() {
   useEffect(() => {
     async function load() {
       try {
-        const [incidentData, eventsData, metricsData] = await Promise.all([
+        const [incidentData, eventsData, metricsData, inferencesData] = await Promise.all([
           apiFetch<Incident>(`/incidents/${incidentId}`),
           apiFetch<EventLog[]>(`/incidents/${incidentId}/events`),
           apiFetch<MetricPoint[]>(`/incidents/${incidentId}/metrics`),
+          apiFetch<InferenceListResponse>(`/incidents/${incidentId}/inferences`),
         ]);
         setIncident(incidentData);
         setEvents(eventsData);
         setMetrics(metricsData);
+        setInferences(inferencesData.inferences);
         if (incidentData.analysis_json) {
           setAnalysis(incidentData.analysis_json as unknown as AnalysisResult);
         }
@@ -343,6 +348,10 @@ export default function IncidentDetailPage() {
               <Layers className="w-3.5 h-3.5" />
               Events ({events.length})
             </TabsTrigger>
+            <TabsTrigger value="inferences" className="gap-2">
+              <Brain className="w-3.5 h-3.5" />
+              Inferences ({inferences.length})
+            </TabsTrigger>
           </TabsList>
 
           {/* Timeline Tab */}
@@ -510,6 +519,11 @@ export default function IncidentDetailPage() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Inferences Tab */}
+          <TabsContent value="inferences">
+            <InferenceTimeline inferences={inferences} />
           </TabsContent>
         </Tabs>
       </main>
