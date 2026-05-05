@@ -280,6 +280,7 @@ async def analyze_incident(
                     "cause": finding["cause"],
                     "confidence": finding["confidence"],
                     "description": finding["description"],
+                    "rule_id": finding["rule_id"],
                 }
             )
             evidence.extend(finding.get("evidence", []))
