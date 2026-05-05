@@ -40,10 +40,11 @@ def _mock_db(metrics: list[MetricPoint], events: list[EventLog]) -> AsyncMock:
     """Return an AsyncSession mock that yields the given metrics and events.
 
     Call order expected by analyze_incident:
-      1. metrics   (Rule 1–7 system rules)
-      2. events    (Rule 1–7 system rules)
+      1. metrics    (Rule 1–7 system rules)
+      2. events     (Rule 1–7 system rules)
       3. inferences (RuleAI001._get_inferences)
-      4. ood_signals (RuleAI002._get_ood_signals)
+      4. ood_signals (RuleAI002._get_ood_signals via inferences join)
+      5. inferences (RuleAI003._get_inferences)
     """
     db = AsyncMock()
 
@@ -58,7 +59,7 @@ def _mock_db(metrics: list[MetricPoint], events: list[EventLog]) -> AsyncMock:
     empty_result.scalars.return_value.all.return_value = []
 
     db.execute = AsyncMock(
-        side_effect=[metrics_result, events_result, empty_result, empty_result]
+        side_effect=[metrics_result, events_result, empty_result, empty_result, empty_result]
     )
     return db
 
