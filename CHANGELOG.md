@@ -5,6 +5,36 @@ Format: [Conventional Commits](https://www.conventionalcommits.org/).
 
 ---
 
+## [0.2.0] — Week 2+3 YC Sprint (2026-05-04)
+
+### Added
+- **AI layer seed data** — `POST /seed/demo` now seeds 3 ModelRuns + 65 inference frames + 3 OODSignals
+  - Incident 01 (CPU contention): 30 frames, confidence 0.93→0.41 (46.9% drop), 2 OOD signals
+  - Incident 02 (thermal throttle): 25 frames, confidence 0.91→0.49 (36.9% drop), 1 OOD signal
+  - Incident 03 (version regression): 10 frames, confidence stable 0.87→0.83, no OOD (AI rules intentionally silent)
+- **AI-001** — Perception confidence collapse rule: fires when p50 confidence drops >30% first→second half
+- **AI-002** — OOD input detected rule: fires on any `OODSignal.is_ood=True` linked to incident
+- **AI-003** — Inference latency spike rule: fires when p99 latency in second half >2× first half
+- **AI query endpoints**: `GET /api/v1/incidents/{id}/inferences`, `GET /api/v1/inferences/{id}`, `GET /api/v1/inferences/{id}/attention`
+- **InferenceTimeline component**: dual-axis Recharts chart (confidence left, latency_ms right); per-frame table with links to detail page
+- **Inference detail page** (`/inferences/[id]`): capture metadata, output stats, attention status
+- **Inferences tab** on incident detail page (Brain icon, frame count badge)
+- **AI rule badges** in analysis probable-causes panel: violet `AI-xxx` pill on AI-layer findings
+- **Confidence bar** in probable-causes: color-coded red/yellow/green with percentage
+- **Dashboard "AI Anomalies" stat**: counts incidents with AI-layer rule findings (replaces "Active Incidents")
+- **Dashboard AI anomaly badge**: violet "AI anomaly" tag on incident table rows
+- **Loading skeletons**: pulse skeleton layouts on incident detail + dashboard panels (replaces plain text)
+- **InferenceTimeline empty state**: Brain icon + model-collector CTA (replaces plain text)
+- `apps/web/src/types/ai_layer.ts` — `Inference`, `ModelRun`, `Decision`, `OODSignal`, `AttentionResponse`, `ReplayJob` TS types
+- `AnalysisResult.probable_causes` gains optional `rule_id` field
+- 13 new API tests (test_ai_query.py, test_ai_rules.py extended); all 35 passing
+
+### Changed
+- `apps/api/app/services/analysis.py` — `_AI_RULES` list now includes AI-001, AI-002, AI-003
+- `_mock_db` in `test_analysis_rules.py` supplies 5 `db.execute` side effects (3 AI rule calls)
+
+---
+
 ## [Unreleased] — Week 1 (2026-05-01)
 
 ### Added
