@@ -1,8 +1,8 @@
-# TraceMind
+# Watchmind
 
 **End-to-end traces, replay, and root-cause analysis for ROS2 and edge AI systems.**
 
-TraceMind is an incident analysis platform for physical AI systems. When a robot fails in the field, TraceMind captures telemetry across the stack — logs, metrics, ROS2 topics, inference timing, hardware state — and generates replayable failure bundles with AI-assisted root-cause analysis.
+Watchmind is an incident analysis platform for physical AI systems. When a robot fails in the field, TraceMind captures telemetry across the stack — logs, metrics, ROS2 topics, inference timing, hardware state — and generates replayable failure bundles with AI-assisted root-cause analysis.
 
 > *Stop guessing why your robot failed.*
 
