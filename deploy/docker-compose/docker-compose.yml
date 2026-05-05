@@ -23,7 +23,7 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: postgresql+asyncpg://watchpoint:watchpoint@postgres:5432/watchpoint
-      CORS_ORIGINS: http://localhost:3000
+      CORS_ORIGINS: http://localhost:3000,http://localhost:3001
       STORAGE_PATH: /app/storage
     depends_on:
       postgres:

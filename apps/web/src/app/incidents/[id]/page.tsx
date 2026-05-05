@@ -8,6 +8,7 @@ import {
   Activity,
   ArrowLeft,
   Brain,
+  Loader2,
   ChevronRight,
   Clock,
   Download,
@@ -252,7 +253,11 @@ export default function IncidentDetailPage() {
               onClick={runAnalysis}
               disabled={analyzing}
             >
-              <Brain className="w-4 h-4" />
+              {analyzing ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Brain className="w-4 h-4" />
+              )}
               {analyzing ? "Analyzing..." : "Run Analysis"}
             </Button>
             <Button size="sm" className="gap-2" onClick={downloadBundle}>
