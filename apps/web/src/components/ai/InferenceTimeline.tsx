@@ -11,6 +11,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { Brain } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -36,12 +37,19 @@ export function InferenceTimeline({ inferences }: Props) {
     return (
       <Card>
         <CardContent className="pt-6">
-          <p className="text-sm text-muted-foreground py-8 text-center">
-            No inference data for this incident.{" "}
-            <span className="opacity-60">
-              Attach the model-collector to your model to capture inferences.
-            </span>
-          </p>
+          <div className="flex flex-col items-center gap-3 py-12 text-center">
+            <div className="p-3 rounded-full bg-muted">
+              <Brain className="w-6 h-6 text-muted-foreground" />
+            </div>
+            <div>
+              <p className="text-sm font-medium">No inference data captured</p>
+              <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+                Attach{" "}
+                <span className="font-mono text-[11px]">model-collector</span>{" "}
+                to your PyTorch model to capture per-frame AI telemetry.
+              </p>
+            </div>
+          </div>
         </CardContent>
       </Card>
     );
