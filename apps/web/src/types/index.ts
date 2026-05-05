@@ -81,6 +81,7 @@ export interface AnalysisResult {
     cause: string;
     confidence: number;
     description: string;
+    rule_id?: string;
   }>;
   evidence: Array<{
     signal: string;

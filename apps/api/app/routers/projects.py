@@ -28,9 +28,7 @@ async def get_project(project_id: uuid.UUID, db: AsyncSession = Depends(get_db))
 
 
 @router.get("/{project_id}/summary")
-async def get_project_summary(
-    project_id: uuid.UUID, db: AsyncSession = Depends(get_db)
-):
+async def get_project_summary(project_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     device_count = await db.execute(
         select(func.count(Device.id)).where(Device.project_id == project_id)
     )

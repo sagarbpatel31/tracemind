@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TraceMind — Incident Intelligence for Robots",
-  description: "End-to-end traces, replay, and root-cause analysis for ROS2 and edge AI systems.",
+  title: "Watchpoint — AI Failure Forensics for Robots",
+  description: "Model-level introspection, replay, and root-cause analysis for ROS2 and edge AI systems.",
 };
 
 export default function RootLayout({

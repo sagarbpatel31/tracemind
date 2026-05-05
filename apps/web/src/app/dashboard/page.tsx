@@ -7,12 +7,11 @@ import {
   Activity,
   AlertTriangle,
   ArrowRight,
+  Brain,
   CheckCircle,
-  Cpu,
   HardDrive,
   Radio,
   Server,
-  XCircle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -31,6 +30,13 @@ import type { Device, Incident, IncidentListResponse, ProjectSummary } from "@/t
 import { apiFetch } from "@/lib/api-client";
 
 const DEMO_PROJECT_ID = "11111111-1111-1111-1111-111111111111";
+
+/** True when the incident's analysis contains at least one AI-layer rule finding. */
+function hasAiRule(incident: Incident): boolean {
+  const causes = (incident.analysis_json as { probable_causes?: Array<{ rule_id?: string }> } | null)
+    ?.probable_causes;
+  return Array.isArray(causes) && causes.some((c) => c.rule_id?.startsWith("AI-"));
+}
 
 export default function DashboardPage() {
   const [devices, setDevices] = useState<Device[]>([]);
@@ -104,11 +110,9 @@ export default function DashboardPage() {
             value={summary?.total_incidents ?? "—"}
           />
           <StatCard
-            icon={<Activity className="w-4 h-4 text-blue-500" />}
-            label="Active Incidents"
-            value={
-              incidents.filter((i) => i.status !== "resolved").length || "—"
-            }
+            icon={<Brain className="w-4 h-4 text-violet-500" />}
+            label="AI Anomalies"
+            value={incidents.filter(hasAiRule).length || "—"}
           />
         </div>
 
@@ -123,7 +127,11 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               {loading ? (
-                <p className="text-sm text-muted-foreground">Loading...</p>
+                <div className="space-y-2">
+                  {[1, 2, 3].map((n) => (
+                    <div key={n} className="h-14 rounded-lg bg-muted animate-pulse" />
+                  ))}
+                </div>
               ) : devices.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   No devices registered. Run the seed script to populate demo
@@ -174,7 +182,11 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               {loading ? (
-                <p className="text-sm text-muted-foreground">Loading...</p>
+                <div className="space-y-2">
+                  {[1, 2, 3].map((n) => (
+                    <div key={n} className="h-12 rounded-lg bg-muted animate-pulse" />
+                  ))}
+                </div>
               ) : incidents.length === 0 ? (
                 <p className="text-sm text-muted-foreground">
                   No incidents yet. Run the seed script to populate demo data.
@@ -194,8 +206,16 @@ export default function DashboardPage() {
                     {incidents.map((incident) => (
                       <TableRow key={incident.id}>
                         <TableCell>
-                          <div className="font-medium text-sm">
-                            {incident.title}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-medium text-sm">
+                              {incident.title}
+                            </span>
+                            {hasAiRule(incident) && (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-violet-500/15 text-violet-400 border border-violet-500/25">
+                                <Brain className="w-2.5 h-2.5" />
+                                AI anomaly
+                              </span>
+                            )}
                           </div>
                           <div className="text-xs text-muted-foreground">
                             {incident.trigger_type || "manual"}

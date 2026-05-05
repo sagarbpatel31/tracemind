@@ -4,12 +4,13 @@ from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.database import get_db
-from app.models.device import Device, Deployment
-from app.models.incident import Incident, IncidentArtifact, IncidentStatus
+from app.models.ai_layer import Inference
+from app.models.device import Deployment, Device
+from app.models.incident import Incident, IncidentStatus
 from app.models.telemetry import EventLog, MetricPoint
+from app.schemas.ai_layer import InferenceListResponse, InferenceResponse
 from app.schemas.incident import (
     IncidentCreate,
     IncidentDetailResponse,
@@ -73,9 +74,7 @@ async def list_incidents(
 
 @router.get("/{incident_id}", response_model=IncidentDetailResponse)
 async def get_incident(incident_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(
-        select(Incident).where(Incident.id == incident_id)
-    )
+    result = await db.execute(select(Incident).where(Incident.id == incident_id))
     incident = result.scalar_one_or_none()
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")
@@ -159,13 +158,27 @@ async def get_incident_metrics(
     ]
 
 
-@router.post("/{incident_id}/analyze")
-async def analyze_incident_endpoint(
-    incident_id: uuid.UUID, db: AsyncSession = Depends(get_db)
+@router.get("/{incident_id}/inferences", response_model=InferenceListResponse)
+async def list_incident_inferences(
+    incident_id: uuid.UUID,
+    limit: int = 200,
+    db: AsyncSession = Depends(get_db),
 ):
+    """List all inference frames linked to an incident, ordered by timestamp."""
     result = await db.execute(
-        select(Incident).where(Incident.id == incident_id)
+        select(Inference)
+        .where(Inference.incident_id == incident_id)
+        .order_by(Inference.timestamp_ns)
+        .limit(limit)
     )
+    inferences = result.scalars().all()
+    rows = [InferenceResponse.model_validate(i) for i in inferences]
+    return InferenceListResponse(inferences=rows, total=len(rows))
+
+
+@router.post("/{incident_id}/analyze")
+async def analyze_incident_endpoint(incident_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Incident).where(Incident.id == incident_id))
     incident = result.scalar_one_or_none()
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")
@@ -181,12 +194,8 @@ async def analyze_incident_endpoint(
 
 
 @router.post("/{incident_id}/replay-bundle")
-async def create_replay_bundle(
-    incident_id: uuid.UUID, db: AsyncSession = Depends(get_db)
-):
-    result = await db.execute(
-        select(Incident).where(Incident.id == incident_id)
-    )
+async def create_replay_bundle(incident_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    result = await db.execute(select(Incident).where(Incident.id == incident_id))
     incident = result.scalar_one_or_none()
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")

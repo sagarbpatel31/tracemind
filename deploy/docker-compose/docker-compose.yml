@@ -2,15 +2,15 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: tracemind
-      POSTGRES_PASSWORD: tracemind
-      POSTGRES_DB: tracemind
+      POSTGRES_USER: watchpoint
+      POSTGRES_PASSWORD: watchpoint
+      POSTGRES_DB: watchpoint
     ports:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U tracemind"]
+      test: ["CMD-SHELL", "pg_isready -U watchpoint"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -22,7 +22,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      DATABASE_URL: postgresql+asyncpg://tracemind:tracemind@postgres:5432/tracemind
+      DATABASE_URL: postgresql+asyncpg://watchpoint:watchpoint@postgres:5432/watchpoint
       CORS_ORIGINS: http://localhost:3000
       STORAGE_PATH: /app/storage
     depends_on:

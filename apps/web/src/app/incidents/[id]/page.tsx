@@ -6,10 +6,8 @@ import Link from "next/link";
 import { format } from "date-fns";
 import {
   Activity,
-  AlertTriangle,
   ArrowLeft,
   Brain,
-  CheckCircle,
   ChevronRight,
   Clock,
   Download,
@@ -17,7 +15,6 @@ import {
   Layers,
   Lightbulb,
   Package,
-  Search,
   Zap,
 } from "lucide-react";
 import {
@@ -42,9 +39,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Separator } from "@/components/ui/separator";
+import { InferenceTimeline } from "@/components/ai/InferenceTimeline";
 import { Navbar } from "@/components/layout/navbar";
 import type { AnalysisResult, EventLog, Incident, MetricPoint } from "@/types";
+import type { Inference, InferenceListResponse } from "@/types/ai_layer";
 import { apiFetch, apiUrl } from "@/lib/api-client";
 
 export default function IncidentDetailPage() {
@@ -54,6 +52,7 @@ export default function IncidentDetailPage() {
   const [incident, setIncident] = useState<Incident | null>(null);
   const [events, setEvents] = useState<EventLog[]>([]);
   const [metrics, setMetrics] = useState<MetricPoint[]>([]);
+  const [inferences, setInferences] = useState<Inference[]>([]);
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
@@ -61,14 +60,16 @@ export default function IncidentDetailPage() {
   useEffect(() => {
     async function load() {
       try {
-        const [incidentData, eventsData, metricsData] = await Promise.all([
+        const [incidentData, eventsData, metricsData, inferencesData] = await Promise.all([
           apiFetch<Incident>(`/incidents/${incidentId}`),
           apiFetch<EventLog[]>(`/incidents/${incidentId}/events`),
           apiFetch<MetricPoint[]>(`/incidents/${incidentId}/metrics`),
+          apiFetch<InferenceListResponse>(`/incidents/${incidentId}/inferences`),
         ]);
         setIncident(incidentData);
         setEvents(eventsData);
         setMetrics(metricsData);
+        setInferences(inferencesData.inferences);
         if (incidentData.analysis_json) {
           setAnalysis(incidentData.analysis_json as unknown as AnalysisResult);
         }
@@ -166,7 +167,23 @@ export default function IncidentDetailPage() {
       <div className="min-h-screen bg-background">
         <Navbar />
         <main className="max-w-7xl mx-auto px-6 py-8">
-          <p className="text-muted-foreground">Loading incident...</p>
+          {/* Breadcrumb skeleton */}
+          <div className="h-4 w-48 rounded bg-muted animate-pulse mb-6" />
+          {/* Header skeleton */}
+          <div className="flex items-start justify-between mb-6">
+            <div className="space-y-2 flex-1">
+              <div className="h-7 w-2/3 rounded bg-muted animate-pulse" />
+              <div className="h-4 w-1/3 rounded bg-muted animate-pulse" />
+            </div>
+            <div className="h-9 w-32 rounded bg-muted animate-pulse" />
+          </div>
+          {/* Cards skeleton */}
+          <div className="grid md:grid-cols-3 gap-6 mb-6">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="h-32 rounded-lg bg-muted animate-pulse" />
+            ))}
+          </div>
+          <div className="h-64 rounded-lg bg-muted animate-pulse" />
         </main>
       </div>
     );
@@ -263,27 +280,59 @@ export default function IncidentDetailPage() {
                     Probable Causes
                   </h4>
                   <div className="space-y-2">
-                    {analysis.probable_causes.map((cause, i) => (
-                      <div
-                        key={i}
-                        className="flex items-start gap-3 p-3 rounded-lg bg-background/50 border border-border/40"
-                      >
-                        <div className="flex items-center gap-2 min-w-[120px]">
-                          <AlertTriangle className="w-3.5 h-3.5 text-orange-500" />
-                          <span className="text-xs font-mono text-muted-foreground">
-                            {Math.round(cause.confidence * 100)}%
-                          </span>
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium">
-                            {cause.cause}
+                    {analysis.probable_causes.map((cause, i) => {
+                      const pct = Math.round(cause.confidence * 100);
+                      const confColor =
+                        pct >= 75
+                          ? "text-green-500"
+                          : pct >= 50
+                          ? "text-yellow-500"
+                          : "text-red-500";
+                      const isAiRule =
+                        cause.rule_id && cause.rule_id.startsWith("AI-");
+                      return (
+                        <div
+                          key={i}
+                          className="flex items-start gap-3 p-3 rounded-lg bg-background/50 border border-border/40"
+                        >
+                          <div className="flex flex-col items-center gap-1 min-w-[60px]">
+                            <span className={`text-xs font-mono font-semibold ${confColor}`}>
+                              {pct}%
+                            </span>
+                            <div
+                              className="h-1 w-full rounded-full bg-border/50 overflow-hidden"
+                            >
+                              <div
+                                className={`h-full rounded-full ${
+                                  pct >= 75
+                                    ? "bg-green-500"
+                                    : pct >= 50
+                                    ? "bg-yellow-500"
+                                    : "bg-red-500"
+                                }`}
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
                           </div>
-                          <div className="text-xs text-muted-foreground mt-0.5">
-                            {cause.description}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-sm font-medium">
+                                {cause.cause}
+                              </span>
+                              {isAiRule && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-violet-500/15 text-violet-400 border border-violet-500/25">
+                                  <Brain className="w-2.5 h-2.5" />
+                                  {cause.rule_id}
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-0.5">
+                              {cause.description}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
@@ -345,6 +394,10 @@ export default function IncidentDetailPage() {
             <TabsTrigger value="events" className="gap-2">
               <Layers className="w-3.5 h-3.5" />
               Events ({events.length})
+            </TabsTrigger>
+            <TabsTrigger value="inferences" className="gap-2">
+              <Brain className="w-3.5 h-3.5" />
+              Inferences ({inferences.length})
             </TabsTrigger>
           </TabsList>
 
@@ -513,6 +566,11 @@ export default function IncidentDetailPage() {
                 )}
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Inferences Tab */}
+          <TabsContent value="inferences">
+            <InferenceTimeline inferences={inferences} />
           </TabsContent>
         </Tabs>
       </main>

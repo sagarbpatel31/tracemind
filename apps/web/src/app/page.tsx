@@ -11,7 +11,7 @@ import {
   Search,
   Zap,
 } from "lucide-react";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -25,7 +25,7 @@ export default function LandingPage() {
             <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
               <Activity className="w-5 h-5 text-primary-foreground" />
             </div>
-            <span className="text-lg font-bold tracking-tight">TraceMind</span>
+            <span className="text-lg font-bold tracking-tight">Watchpoint</span>
           </div>
           <div className="flex items-center gap-4">
             <Link
@@ -55,7 +55,7 @@ export default function LandingPage() {
               your robot failed.
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-8 leading-relaxed">
-              TraceMind captures incidents, correlates telemetry across your
+              Watchpoint captures incidents, correlates telemetry across your
               entire stack, and generates replayable failure bundles with
               AI-assisted root-cause analysis. Built for ROS2 and edge AI teams.
             </p>
@@ -99,7 +99,7 @@ export default function LandingPage() {
               From failure to root cause in minutes
             </h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              TraceMind connects every signal — logs, metrics, ROS topics,
+              Watchpoint connects every signal — logs, metrics, ROS topics,
               inference timing, hardware state — into one incident timeline.
             </p>
           </div>
@@ -186,17 +186,17 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-3 gap-6">
             <UseCaseCard
               title="Topic Starvation"
-              description="Camera topic drops from 30Hz to 2Hz. TraceMind shows the CPU spike, inference backlog, and degraded motion planner outputs — all correlated on one timeline."
+              description="Camera topic drops from 30Hz to 2Hz. Watchpoint shows the CPU spike, inference backlog, and degraded motion planner outputs — all correlated on one timeline."
               severity="high"
             />
             <UseCaseCard
               title="Thermal Throttling"
-              description="Jetson overheats during outdoor operation. TraceMind captures the temperature rise, GPU frequency throttling, and inference latency increase that triggered a watchdog timeout."
+              description="Jetson overheats during outdoor operation. Watchpoint captures the temperature rise, GPU frequency throttling, and inference latency increase that triggered a watchdog timeout."
               severity="critical"
             />
             <UseCaseCard
               title="Version Regression"
-              description="New deployment causes more mission aborts. TraceMind groups incidents by release version, showing higher latency in one node path and a config mismatch."
+              description="New deployment causes more mission aborts. Watchpoint groups incidents by release version, showing higher latency in one node path and a config mismatch."
               severity="medium"
             />
           </div>
@@ -208,16 +208,16 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6 text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to debug faster?</h2>
           <p className="text-muted-foreground max-w-lg mx-auto mb-8">
-            Get started with TraceMind in minutes. One install script, instant
+            Get started with Watchpoint in minutes. One install script, instant
             telemetry, automatic incident detection.
           </p>
           <div className="flex flex-col items-center gap-6">
             <div className="bg-muted rounded-lg px-6 py-3 font-mono text-sm max-w-md w-full text-left">
               <span className="text-muted-foreground">$ </span>
-              curl -fsSL https://tracemind.ai/install.sh | bash
+              curl -fsSL https://watchpoint.ai/install.sh | bash
               <br />
               <span className="text-muted-foreground">$ </span>
-              tracemind connect --project my-robot
+              watchpoint connect --project my-robot
             </div>
             <Link href="/dashboard" className={cn(buttonVariants({ size: "lg" }), "gap-2")}>
               Explore the Demo
@@ -232,7 +232,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Activity className="w-4 h-4" />
-            TraceMind — Incident intelligence for robots
+            Watchpoint — Incident intelligence for robots
           </div>
           <div className="text-xs text-muted-foreground">
             Built for ROS2 and edge AI teams

@@ -6,16 +6,16 @@ import { Activity, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getUser, isAuthenticated, logout, type AuthUser } from "@/lib/auth";
 
+type NavState = { mounted: boolean; user: AuthUser | null };
+
 export function Navbar() {
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [mounted, setMounted] = useState(false);
+  const [nav, setNav] = useState<NavState>({ mounted: false, user: null });
 
   useEffect(() => {
-    setMounted(true);
-    if (isAuthenticated()) {
-      setUser(getUser());
-    }
+    setNav({ mounted: true, user: isAuthenticated() ? getUser() : null });
   }, []);
+
+  const { mounted, user } = nav;
 
   return (
     <nav className="border-b border-border/40 bg-background/95 backdrop-blur-sm sticky top-0 z-50">
@@ -25,7 +25,7 @@ export function Navbar() {
             <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
               <Activity className="w-4 h-4 text-primary-foreground" />
             </div>
-            <span className="font-bold tracking-tight">TraceMind</span>
+            <span className="font-bold tracking-tight">Watchpoint</span>
           </Link>
           <div className="flex items-center gap-4 text-sm">
             <Link
