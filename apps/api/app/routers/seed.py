@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
+from app.models.ai_layer import Framework, Inference, ModelRun, OODSignal
 from app.models.device import Deployment, Device, DeviceStatus
 from app.models.incident import Incident, IncidentStatus, Severity
 from app.models.telemetry import EventLog, LogLevel, MetricPoint
@@ -34,6 +35,17 @@ INCIDENT_IDS = [
     uuid.UUID("eeeeeeee-eeee-eeee-eeee-eeeeeeeeee01"),
     uuid.UUID("eeeeeeee-eeee-eeee-eeee-eeeeeeeeee02"),
     uuid.UUID("eeeeeeee-eeee-eeee-eeee-eeeeeeeeee03"),
+]
+MODEL_RUN_IDS = [
+    uuid.UUID("ffffffff-ffff-ffff-ffff-fffffffffff1"),
+    uuid.UUID("ffffffff-ffff-ffff-ffff-fffffffffff2"),
+    uuid.UUID("ffffffff-ffff-ffff-ffff-fffffffffff3"),
+]
+# Specific inference IDs that get OOD signals attached
+_OOD_INF_IDS = [
+    uuid.UUID("cccccccc-cccc-cccc-cccc-cc0000000001"),  # incident 01, frame 15 (t≈45s)
+    uuid.UUID("cccccccc-cccc-cccc-cccc-cc0000000002"),  # incident 01, frame 16 (t≈48s)
+    uuid.UUID("cccccccc-cccc-cccc-cccc-cc0000000003"),  # incident 02, frame 13 (t≈62s)
 ]
 
 
@@ -350,6 +362,11 @@ async def seed_demo_data(db: AsyncSession = Depends(get_db)):
             )
         )
 
+    # -----------------------------------------------------------------------
+    # AI layer — ModelRuns, Inferences, OODSignals
+    # -----------------------------------------------------------------------
+    ai_frame_count = _seed_ai_layer(db, base_time)
+
     await db.commit()
 
     return {
@@ -363,5 +380,216 @@ async def seed_demo_data(db: AsyncSession = Depends(get_db)):
             "incidents": 3,
             "event_logs": len(events_1) + len(events_2) + len(events_3),
             "metric_points": 90 * 5 + 120 * 4 + 60 * 3,
+            "model_runs": 3,
+            "inference_frames": ai_frame_count,
+            "ood_signals": 3,
         },
     }
+
+
+def _seed_ai_layer(db: AsyncSession, base_time: datetime) -> int:
+    """Seed ModelRun + Inference + OODSignal rows for all 3 demo incidents.
+
+    Returns total inference frame count.
+
+    Incident 01 — CPU contention (30 frames, 90s, DEVICE_IDS[0])
+      Confidence: 0.93 → 0.41  (>30% drop — AI-001 fires)
+      Latency:    15ms → 195ms
+      OOD:        2 signals on frames 15+16 (AI-002 fires)
+
+    Incident 02 — Thermal throttle (25 frames, 120s, DEVICE_IDS[0])
+      Confidence: 0.91 → 0.48  (~38% drop — AI-001 fires)
+      Latency:    18ms → 200ms
+      OOD:        1 signal on frame 13 (AI-002 fires)
+
+    Incident 03 — Version regression (10 frames, 60s, DEVICE_IDS[2])
+      Confidence: 0.87 → 0.83  (<5% drop — AI-001 does NOT fire)
+      Latency:    20ms → 45ms
+      OOD:        none (AI-002 does NOT fire)
+    """
+    now = datetime.now(timezone.utc)
+
+    # ---- Model runs --------------------------------------------------------
+    model_runs = [
+        ModelRun(
+            id=MODEL_RUN_IDS[0],
+            device_id=DEVICE_IDS[0],
+            framework=Framework.pytorch,
+            model_name="yolo-v8n",
+            weights_hash="a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+            started_at=base_time,
+            metadata_json={"input_size": [640, 640], "batch_size": 1},
+        ),
+        ModelRun(
+            id=MODEL_RUN_IDS[1],
+            device_id=DEVICE_IDS[0],
+            framework=Framework.pytorch,
+            model_name="yolo-v8n",
+            weights_hash="a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+            started_at=base_time + timedelta(minutes=15),
+            metadata_json={"input_size": [640, 640], "batch_size": 1},
+        ),
+        ModelRun(
+            id=MODEL_RUN_IDS[2],
+            device_id=DEVICE_IDS[2],
+            framework=Framework.pytorch,
+            model_name="nav-planner",
+            weights_hash="b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3",
+            started_at=base_time + timedelta(minutes=30),
+            metadata_json={"input_size": [224, 224], "batch_size": 1},
+        ),
+    ]
+    for mr in model_runs:
+        db.add(mr)
+
+    # ---- Incident 01: confidence collapse (30 frames, 3s spacing) ----------
+    # First half (frames 0-14): median ~0.87 → Second half (frames 15-29): median ~0.44
+    # Drop ≈ 49% → AI-001 fires
+    i01_base = base_time
+    i01_step_s = 3  # 90s / 30 frames
+
+    # Pre-compute confidence + latency for all 30 frames
+    # Confidence: smooth S-curve drop starting at frame 10
+    i01_confs = []
+    for f in range(30):
+        if f < 10:
+            c = 0.93 - f * 0.005  # 0.93 → 0.88 (slow decline)
+        elif f < 15:
+            c = 0.88 - (f - 10) * 0.065  # 0.88 → 0.555 (sharp drop)
+        else:
+            c = 0.51 - (f - 15) * 0.005  # 0.51 → 0.44 (plateau)
+        i01_confs.append(round(max(c, 0.40), 3))
+
+    i01_lats = []
+    for f in range(30):
+        if f < 12:
+            lat = 15.0 + f * 0.5
+        else:
+            lat = 21.0 + (f - 12) ** 2.1 * 0.95
+        i01_lats.append(round(min(lat, 200.0), 1))
+
+    for f in range(30):
+        ts_ns = int((i01_base + timedelta(seconds=f * i01_step_s)).timestamp() * 1e9)
+        # Frames 15 and 16 get fixed UUIDs so we can attach OOD signals
+        inf_id = _OOD_INF_IDS[0] if f == 15 else (_OOD_INF_IDS[1] if f == 16 else uuid.uuid4())
+        db.add(
+            Inference(
+                id=inf_id,
+                model_run_id=MODEL_RUN_IDS[0],
+                device_id=DEVICE_IDS[0],
+                incident_id=INCIDENT_IDS[0],
+                timestamp_ns=ts_ns,
+                confidence=i01_confs[f],
+                latency_ms=i01_lats[f],
+                layer_name="model.head",
+                output_mean=round(0.55 - f * 0.003, 4),
+                output_std=round(0.12 + f * 0.002, 4),
+            )
+        )
+
+    # OOD signals for incident 01 (frames 15 + 16)
+    db.add(
+        OODSignal(
+            id=uuid.uuid4(),
+            inference_id=_OOD_INF_IDS[0],
+            signal_type="embedding_distance",
+            score=2.71,
+            threshold=2.0,
+            is_ood=True,
+            created_at=now,
+        )
+    )
+    db.add(
+        OODSignal(
+            id=uuid.uuid4(),
+            inference_id=_OOD_INF_IDS[1],
+            signal_type="softmax_entropy",
+            score=0.81,
+            threshold=0.60,
+            is_ood=True,
+            created_at=now,
+        )
+    )
+
+    # ---- Incident 02: thermal throttle (25 frames, ~4.8s spacing) ----------
+    # First half (frames 0-11): median ~0.85 → Second half (frames 12-24): median ~0.54
+    # Drop ≈ 37% → AI-001 fires
+    i02_base = base_time + timedelta(minutes=15)
+    i02_step_s = 4.8  # 120s / 25 frames
+
+    i02_confs = []
+    for f in range(25):
+        # Keep first 12 frames high, sharp drop in frames 12-24
+        # First half (0-11) median ≈ 0.88, second half (12-24) median ≈ 0.56
+        # Drop ≈ 36% → AI-001 fires comfortably
+        if f < 12:
+            c = 0.91 - f * 0.004  # 0.91 → 0.866 (gentle decline)
+        else:
+            c = 0.68 - (f - 12) * 0.020  # 0.68 → 0.44 (thermal cliff)
+        i02_confs.append(round(max(c, 0.45), 3))
+
+    i02_lats = []
+    for f in range(25):
+        if f < 10:
+            lat = 18.0 + f * 0.8
+        else:
+            lat = 26.0 + (f - 10) ** 2.2 * 1.1
+        i02_lats.append(round(min(lat, 200.0), 1))
+
+    for f in range(25):
+        ts_ns = int((i02_base + timedelta(seconds=f * i02_step_s)).timestamp() * 1e9)
+        inf_id = _OOD_INF_IDS[2] if f == 13 else uuid.uuid4()
+        db.add(
+            Inference(
+                id=inf_id,
+                model_run_id=MODEL_RUN_IDS[1],
+                device_id=DEVICE_IDS[0],
+                incident_id=INCIDENT_IDS[1],
+                timestamp_ns=ts_ns,
+                confidence=i02_confs[f],
+                latency_ms=i02_lats[f],
+                layer_name="model.head",
+                output_mean=round(0.52 - f * 0.002, 4),
+                output_std=round(0.11 + f * 0.003, 4),
+            )
+        )
+
+    # OOD signal for incident 02 (frame 13)
+    db.add(
+        OODSignal(
+            id=uuid.uuid4(),
+            inference_id=_OOD_INF_IDS[2],
+            signal_type="softmax_entropy",
+            score=0.74,
+            threshold=0.60,
+            is_ood=True,
+            created_at=now,
+        )
+    )
+
+    # ---- Incident 03: version regression (10 frames, 6s spacing) -----------
+    # Confidence stable 0.87 → 0.83 — drop <5% → AI-001 does NOT fire
+    # No OOD signals → AI-002 does NOT fire
+    i03_base = base_time + timedelta(minutes=30)
+
+    i03_confs = [round(0.87 - f * 0.004, 3) for f in range(10)]
+    i03_lats = [round(20.0 + f * 2.5, 1) for f in range(10)]
+
+    for f in range(10):
+        ts_ns = int((i03_base + timedelta(seconds=f * 6)).timestamp() * 1e9)
+        db.add(
+            Inference(
+                id=uuid.uuid4(),
+                model_run_id=MODEL_RUN_IDS[2],
+                device_id=DEVICE_IDS[2],
+                incident_id=INCIDENT_IDS[2],
+                timestamp_ns=ts_ns,
+                confidence=i03_confs[f],
+                latency_ms=i03_lats[f],
+                layer_name="planner.backbone",
+                output_mean=round(0.61 - f * 0.001, 4),
+                output_std=round(0.08 + f * 0.001, 4),
+            )
+        )
+
+    return 30 + 25 + 10  # 65 total frames
