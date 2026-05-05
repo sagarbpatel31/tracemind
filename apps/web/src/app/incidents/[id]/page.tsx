@@ -6,7 +6,6 @@ import Link from "next/link";
 import { format } from "date-fns";
 import {
   Activity,
-  AlertTriangle,
   ArrowLeft,
   Brain,
   ChevronRight,
@@ -168,7 +167,23 @@ export default function IncidentDetailPage() {
       <div className="min-h-screen bg-background">
         <Navbar />
         <main className="max-w-7xl mx-auto px-6 py-8">
-          <p className="text-muted-foreground">Loading incident...</p>
+          {/* Breadcrumb skeleton */}
+          <div className="h-4 w-48 rounded bg-muted animate-pulse mb-6" />
+          {/* Header skeleton */}
+          <div className="flex items-start justify-between mb-6">
+            <div className="space-y-2 flex-1">
+              <div className="h-7 w-2/3 rounded bg-muted animate-pulse" />
+              <div className="h-4 w-1/3 rounded bg-muted animate-pulse" />
+            </div>
+            <div className="h-9 w-32 rounded bg-muted animate-pulse" />
+          </div>
+          {/* Cards skeleton */}
+          <div className="grid md:grid-cols-3 gap-6 mb-6">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="h-32 rounded-lg bg-muted animate-pulse" />
+            ))}
+          </div>
+          <div className="h-64 rounded-lg bg-muted animate-pulse" />
         </main>
       </div>
     );
@@ -265,27 +280,59 @@ export default function IncidentDetailPage() {
                     Probable Causes
                   </h4>
                   <div className="space-y-2">
-                    {analysis.probable_causes.map((cause, i) => (
-                      <div
-                        key={i}
-                        className="flex items-start gap-3 p-3 rounded-lg bg-background/50 border border-border/40"
-                      >
-                        <div className="flex items-center gap-2 min-w-[120px]">
-                          <AlertTriangle className="w-3.5 h-3.5 text-orange-500" />
-                          <span className="text-xs font-mono text-muted-foreground">
-                            {Math.round(cause.confidence * 100)}%
-                          </span>
-                        </div>
-                        <div>
-                          <div className="text-sm font-medium">
-                            {cause.cause}
+                    {analysis.probable_causes.map((cause, i) => {
+                      const pct = Math.round(cause.confidence * 100);
+                      const confColor =
+                        pct >= 75
+                          ? "text-green-500"
+                          : pct >= 50
+                          ? "text-yellow-500"
+                          : "text-red-500";
+                      const isAiRule =
+                        cause.rule_id && cause.rule_id.startsWith("AI-");
+                      return (
+                        <div
+                          key={i}
+                          className="flex items-start gap-3 p-3 rounded-lg bg-background/50 border border-border/40"
+                        >
+                          <div className="flex flex-col items-center gap-1 min-w-[60px]">
+                            <span className={`text-xs font-mono font-semibold ${confColor}`}>
+                              {pct}%
+                            </span>
+                            <div
+                              className="h-1 w-full rounded-full bg-border/50 overflow-hidden"
+                            >
+                              <div
+                                className={`h-full rounded-full ${
+                                  pct >= 75
+                                    ? "bg-green-500"
+                                    : pct >= 50
+                                    ? "bg-yellow-500"
+                                    : "bg-red-500"
+                                }`}
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
                           </div>
-                          <div className="text-xs text-muted-foreground mt-0.5">
-                            {cause.description}
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-sm font-medium">
+                                {cause.cause}
+                              </span>
+                              {isAiRule && (
+                                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-violet-500/15 text-violet-400 border border-violet-500/25">
+                                  <Brain className="w-2.5 h-2.5" />
+                                  {cause.rule_id}
+                                </span>
+                              )}
+                            </div>
+                            <div className="text-xs text-muted-foreground mt-0.5">
+                              {cause.description}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
