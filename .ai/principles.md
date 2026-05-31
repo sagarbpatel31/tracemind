@@ -58,7 +58,7 @@ Use JSONB (`analysis_json`, `metadata_json`, `labels_json`) for fields whose sch
 
 ## 10. Migrations before any schema change on live data
 
-`alembic/` is set up but has no migration files. Before the first production write and before any schema change, initialize `alembic revision --autogenerate`. `create_all` is fine for dev only.
+`alembic/` now has migration files (`0001_initial`, `0002_ai_layer`). Before production schema changes, use Alembic revisions and upgrades as the source of truth. `create_all` may remain acceptable for dev bootstrap, but it should not be the production migration strategy.
 
 ## 11. Monorepo service boundaries via HTTP only
 

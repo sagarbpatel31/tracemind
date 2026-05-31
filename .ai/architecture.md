@@ -48,7 +48,7 @@ apps/web (Next.js 16 + shadcn/ui v5)
 ## Backend: apps/api
 
 **Entry:** `apps/api/app/main.py`
-- Lifespan: `Base.metadata.create_all()` on startup — **no Alembic migrations active** (`alembic/versions/` empty)
+- Lifespan: `Base.metadata.create_all()` on startup — **Alembic exists (`0001_initial`, `0002_ai_layer`), but runtime still relies on `create_all`**
 - CORS: comma-split `settings.cors_origins`
 - All routes at `/api/v1`
 
@@ -163,9 +163,9 @@ Next.js 16 app router + TypeScript + Tailwind + shadcn/ui v5 (base-ui).
 
 | Layer | Service | Status | Notes |
 |-------|---------|--------|-------|
-| Frontend | Vercel | ✅ Live | https://watchpoint.vercel.app — NEXT_PUBLIC_API_URL not yet set to prod |
-| API | Render (free) | ❌ Not provisioned | render.yaml ready, ~60s cold start |
-| Database | Supabase (free) | ❌ Not provisioned | 500MB limit, pauses after 1 week idle |
+| Frontend | Vercel | ✅ Live | https://watchpoint.vercel.app — production API wiring still needs confirmation |
+| API | Render (free) | ⚠️ Config ready | `apps/api/render.yaml` exists; live deploy not verified in this review |
+| Database | Supabase (free) | ⚠️ Planned | production project/URL not verified in this review |
 
 ---
 

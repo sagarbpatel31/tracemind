@@ -37,10 +37,10 @@ Do not write a single line of production code until you have read these four fil
 - Prompt ends with output constraint: e.g., `"Terse. No preamble."`
 
 ### Database
-- `alembic/versions/` is empty — there are no active migrations
-- `create_all` on startup is the current mechanism (fine for dev, risky for live schema changes)
+- Alembic migrations now exist: `0001_initial`, `0002_ai_layer`
+- `create_all` on startup is still part of the runtime path (fine for dev, risky for live schema changes)
 - For any new column on an existing table: provide the `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` SQL alongside the model change
-- Do not run `alembic revision` unless explicitly asked
+- Prefer migration-first schema changes; do not generate or rewrite migrations casually without understanding existing history
 
 ### Secrets
 - `JWT_SECRET_KEY` and `ANTHROPIC_API_KEY` from env vars only

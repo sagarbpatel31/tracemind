@@ -1,7 +1,7 @@
 # Handoff
 
 Single source of truth for resuming work after any context break.
-Last updated: 2026-04-25.
+Last updated: 2026-05-31.
 
 ---
 
@@ -18,12 +18,12 @@ Last updated: 2026-04-25.
 | # | Task | Status |
 |---|------|--------|
 | **P1** | Deploy frontend + backend + database end-to-end | ❌ Blocked on user signups |
-| **P2** | Initialize Alembic migrations | ❌ Not started |
+| **P2** | Switch production workflow to migration-first | ⚠️ Partial — Alembic files exist, runtime still uses `create_all` |
 | **P3** | Secure ingest endpoints | ❌ Not started |
 | **P4** | Replace simulated edge agent metrics with real collectors | ❌ Not started |
 | **P5** | Switch JWT from localStorage to httpOnly cookie | ❌ Not started |
 
-**Do not start P2–P5 before P1 is complete.** P2 must run immediately after first production deploy — before any schema change.
+**Do not start P3–P5 before P1 is complete.** P2 should happen immediately after first production deploy — before the next schema change.
 
 ---
 
@@ -56,8 +56,8 @@ curl https://watchpoint-api.onrender.com/api/v1/health
 
 | Branch | Status |
 |--------|--------|
-| `main` | 8 commits — full MVP + LLM + public release |
-| `add-ai-engineering-system` | In progress — .ai/ context layer rebuild, no production code changes |
+| `main` | Active checkout during this audit |
+| Repo status | MVP + AI layer + model-collector + Alembic migrations present in source |
 
 ---
 
@@ -82,7 +82,7 @@ open http://localhost:8000/docs
 | Ingest format: wrapped | `{metrics:[...]}` not `[...]` |
 | LLM fallback required | System must function without `ANTHROPIC_API_KEY` |
 | URL normalization | `config.py` handles cloud URIs automatically — never manually edit |
-| Alembic before schema changes | `alembic/versions/` is empty; do not add model columns on live DB without migration |
+| Alembic before schema changes | Migrations now exist; future schema changes should land as Alembic revisions, not model-only edits |
 
 ---
 
@@ -106,12 +106,14 @@ apps/api/app/security.py               JWT + bcrypt auth
 apps/api/app/services/analysis.py      7 rules engine + Haiku LLM summary
 apps/api/app/services/replay_bundle.py ZIP bundle generation
 apps/api/app/routers/ingest.py         Unauthenticated telemetry ingest (P3 target)
-apps/api/alembic/versions/             EMPTY — no migrations yet (P2 target)
+apps/api/app/routers/ai_ingest.py      Unauthenticated AI-layer ingest/query endpoints
+apps/api/alembic/versions/             0001_initial + 0002_ai_layer
 apps/web/src/lib/api-client.ts         Typed HTTP client with JWT injection
 apps/web/src/lib/auth.ts               Token storage in localStorage (P5 target)
 apps/web/src/types/index.ts            All TypeScript interfaces
 agents/edge-agent/internal/collector/system.go  Simulated metrics (P4 target)
 agents/edge-agent/internal/sender/http.go       Hard-coded project_id (P4 target)
+agents/model-collector/                Python model instrumentation package + tests
 ```
 
 ---
