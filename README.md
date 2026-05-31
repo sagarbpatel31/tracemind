@@ -1,8 +1,8 @@
-# Watchmind
+# Watchpoint
 
-**End-to-end traces, replay, and root-cause analysis for ROS2 and edge AI systems.**
+**Incident intelligence, replay, and root-cause analysis for ROS2 and edge AI systems.**
 
-Watchmind is an incident analysis platform for physical AI systems. When a robot fails in the field, TraceMind captures telemetry across the stack — logs, metrics, ROS2 topics, inference timing, hardware state — and generates replayable failure bundles with AI-assisted root-cause analysis.
+Watchpoint is an incident analysis platform for physical AI systems. When a robot fails in the field, Watchpoint captures telemetry across the stack — logs, metrics, ROS2 topics, inference timing, hardware state — and generates replayable failure bundles with AI-assisted root-cause analysis.
 
 > *Stop guessing why your robot failed.*
 
@@ -10,8 +10,8 @@ Watchmind is an incident analysis platform for physical AI systems. When a robot
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/tracemind.git
-cd tracemind
+git clone https://github.com/sagarbpatel31/watchpoint.git
+cd watchpoint
 
 # Start all services (requires Docker)
 cd deploy/docker-compose
@@ -27,7 +27,7 @@ open http://localhost:3000
 ## Architecture
 
 ```
-tracemind/
+watchpoint/
   apps/
     web/                # Next.js frontend (TypeScript, Tailwind, shadcn/ui)
     api/                # FastAPI backend (Python, SQLAlchemy, PostgreSQL)
@@ -48,7 +48,7 @@ tracemind/
 | Backend | FastAPI, SQLAlchemy 2.0 (async), PostgreSQL 16, Pydantic v2 |
 | Edge Agent | Go (stdlib only), cross-compiled for Linux/ARM |
 | ROS2 Collector | Python, rclpy (with simulation fallback) |
-| Infrastructure | Docker Compose, Alembic migrations |
+| Infrastructure | Docker Compose, Render Blueprint, Alembic migrations |
 
 ## MVP Scope
 

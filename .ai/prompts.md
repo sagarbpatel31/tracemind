@@ -84,8 +84,8 @@ Follow the existing async SQLAlchemy 2.0 patterns. No new dependencies.
 ```
 I need to add field [name] ([type]) to [Model] in apps/api/app/models/[file].
 IMPORTANT: create_all will not add this column to an existing table.
-After adding the model field, also provide the ALTER TABLE SQL to run on the live DB.
-Do not use Alembic — alembic/versions/ is empty and not yet initialized.
+After adding the model field, add or update the Alembic migration needed for the live DB.
+Also provide the `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` SQL when a manual fallback is prudent.
 ```
 
 ### Debug a failing endpoint

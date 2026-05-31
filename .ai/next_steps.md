@@ -1,116 +1,118 @@
 # Next Steps
 
-Priority order is fixed. Do not skip or reorder.
+Last updated: 2026-05-31.
+
+Priority order is fixed. Deployment remains first, but the Alembic item is no longer "initialize migrations" because that work already exists in the repo.
 
 ---
 
 ## 🔴 Priority 1 — End-to-end production deploy
 
-Nothing else matters until the app works for real users. All code is ready.
+Nothing is more important than proving the real hosted stack works.
 
-### Step A: Provision Supabase (user action, ~5 min)
-1. https://supabase.com → sign up → New project
-2. Name: `watchpoint`, region: **US East (N. Virginia)**, strong password
-3. Settings → Database → Connection string → URI tab
-4. Copy URI: `postgresql://postgres:[PASSWORD]@db.[REF].supabase.co:5432/postgres`
-5. Paste to Claude — `config.py` normalizes automatically
+### Step A: Provision Supabase (user action)
+1. Create Supabase project `watchpoint`
+2. Copy the Postgres URI from Settings → Database → Connection string
+3. Provide that URI for Render `DATABASE_URL`
 
-### Step B: Deploy API to Render (user action, ~5 min)
-1. https://render.com → sign up → New → Blueprint
-2. Connect `sagarbpatel31/watchpoint` — Render auto-detects `apps/api/render.yaml`
-3. Set env vars: `DATABASE_URL` (Supabase URI), optionally `ANTHROPIC_API_KEY`
-4. Click Apply → wait for build (~3–5 min)
-5. Copy deploy URL: `https://watchpoint-api.onrender.com`
+### Step B: Deploy API to Render (user action)
+1. Import `sagarbpatel31/watchpoint` as a Render Blueprint
+2. Confirm `apps/api/render.yaml` is used
+3. Set `DATABASE_URL`
+4. Optionally set `ANTHROPIC_API_KEY`
+5. Wait for deploy and record the exact Render URL
 
-### Step C: Wire Vercel + seed + smoke test (Claude handles after URLs provided)
-```bash
-# Set API URL in Vercel
-cd apps/web
-vercel env add NEXT_PUBLIC_API_URL production  # value: https://watchpoint-api.onrender.com
-vercel --prod
+### Step C: Wire Vercel to the real API (after Render URL exists)
+1. Set `NEXT_PUBLIC_API_URL` in Vercel to the Render URL
+2. Redeploy the frontend
+3. Confirm `CORS_ORIGINS` in `apps/api/render.yaml` matches the actual Vercel domain
+4. Verify frontend requests are hitting the hosted API
 
-# Seed production DB
-curl -X POST https://watchpoint-api.onrender.com/api/v1/seed/demo
+### Step D: Seed and smoke test production
+1. `POST /api/v1/seed/demo`
+2. `GET /api/v1/health`
+3. Login to the hosted frontend with `demo@watchpoint.ai / demo123`
+4. Open dashboard, incident detail, and inference detail pages
 
-# Smoke test
-curl https://watchpoint-api.onrender.com/api/v1/health
-# → open https://watchpoint.vercel.app → login demo@watchpoint.ai / demo123
-```
-
-**Blocker:** Steps A and B require user signups. Everything after is automated.
-
----
-
-## 🟠 Priority 2 — Alembic migrations
-
-**Do this before any schema change on a populated production DB.**
-
-`apps/api/alembic/` exists but `versions/` is empty — there are no migration files.
-Currently `create_all` on startup is the only mechanism. Safe once, breaks on any column change.
-
-```bash
-cd apps/api
-pip install alembic  # already in pyproject.toml if present
-alembic revision --autogenerate -m "initial schema from models"
-alembic upgrade head
-```
-
-**Files to touch:** `apps/api/alembic/env.py` (wire async engine), `apps/api/alembic/versions/` (generated).
-No model changes required. Run immediately after first successful production deploy.
+### P1 exit criteria
+- Render API URL is live and responds successfully
+- Vercel frontend points to that API URL
+- Production seed succeeds
+- Basic user flow works end-to-end
 
 ---
 
-## 🟠 Priority 3 — Secure ingest endpoints
+## 🟠 Priority 2 — Switch production workflow to migration-first
 
-**File:** `apps/api/app/routers/ingest.py`
+Alembic is already present:
+- `apps/api/alembic/versions/0001_initial.py`
+- `apps/api/alembic/versions/0002_ai_layer.py`
 
-Current state: `/ingest/logs`, `/ingest/metrics`, `/ingest/events` are unauthenticated.
-Any caller with a device_id UUID can inject telemetry data.
+Remaining work:
+- Document and use `alembic upgrade head` for production bootstrapping
+- Decide whether to keep or remove `Base.metadata.create_all()` in `apps/api/app/main.py`
+- Ensure future schema changes land as migrations first, not model-only changes
 
-Minimal fix: add a device API token (UUID generated at registration, stored hashed, sent in `X-Device-Token` header).
-
-Do not use JWT for agents — token management on embedded devices is fragile.
-Keep the change backward-compatible with existing agents by checking for token presence first.
-
----
-
-## 🟡 Priority 4 — Real edge agent metrics
-
-**File:** `agents/edge-agent/internal/collector/system.go`
-
-Current state: CPU, disk, and network metrics are simulated stubs. Only memory is real.
-Comment in code: *"A production implementation would read from /proc (Linux) or use platform-specific syscalls."*
-
-Options:
-- Add `github.com/shirou/gopsutil/v3` — cross-platform, reads `/proc` on Linux, works on Jetson
-- Or implement `/proc/stat` reads directly for zero-dependency
-
-Also: make `project_id` a CLI flag instead of hard-coded `11111111-...` in `sender/http.go`.
-
-**Important:** Do not deploy to real Jetson hardware until this is done — simulated values will trigger false analysis matches.
+Do this immediately after the first confirmed production deploy.
 
 ---
 
-## 🟡 Priority 5 — Auth/token storage improvements
+## 🟠 Priority 3 — Secure all ingest endpoints
 
-**File:** `apps/web/src/lib/auth.ts`
+Files:
+- `apps/api/app/routers/ingest.py`
+- `apps/api/app/routers/ai_ingest.py`
 
-Current state: JWT stored in `localStorage` — extractable by any XSS payload.
+Current state:
+- Classic telemetry ingest is unauthenticated
+- AI-layer ingest is also unauthenticated
 
-Fix: Switch to `httpOnly; Secure; SameSite=Strict` cookies.
-Requires: Next.js API route as token relay (client → Next.js server → FastAPI), or middleware-based cookie handling.
+Recommended fix:
+- Add device-scoped API tokens for edge/ROS2 collectors
+- Add a separate scoped token strategy for the model-collector
+- Accept token via header such as `X-Device-Token`
+- Store only hashed tokens server-side
 
-This is a meaningful security improvement but low urgency for an MVP with no sensitive customer data.
-Do not do this before Priority 1–4 are complete.
+Do not use JWTs for embedded agents.
 
 ---
 
-## Backlog (no priority yet)
+## 🟡 Priority 4 — Replace edge-agent stubs with real telemetry
 
-- Populate `ros2_snapshot.json` in replay bundle (currently placeholder)
-- `packages/shared-types/` alignment with frontend types
-- Incident auto-trigger from agent anomaly detection
-- Multi-workspace user scoping
-- Alert notifications on critical incidents
-- Cross-compile Go agent for `linux/arm64` (Jetson)
-- Incident timeline auto-grouping by time window
+Files:
+- `agents/edge-agent/internal/collector/system.go`
+- `agents/edge-agent/internal/sender/http.go`
+
+Required changes:
+- Replace simulated CPU/disk/network with real collection
+- Make `project_id` configurable instead of hard-coded
+- Validate behavior on Linux/Jetson target environment
+
+Do not deploy the current Go agent to real hardware expecting trustworthy RCA inputs.
+
+---
+
+## 🟡 Priority 5 — Harden frontend auth storage
+
+File:
+- `apps/web/src/lib/auth.ts`
+
+Current state:
+- JWT stored in `localStorage`
+
+Recommended fix:
+- Move to `httpOnly`, `Secure`, `SameSite=Strict` cookies
+- Add a server-side relay or middleware pattern in Next.js as needed
+
+This matters, but it is still behind P1-P4.
+
+---
+
+## Supporting cleanup
+
+These are not the top production blockers, but they should be fixed soon:
+
+- Recreate stale checked-in `.venv` environments whose shebangs still reference the old `Tracemind` path
+- Update README naming and clone instructions to `Watchpoint`
+- Populate `ros2_snapshot.json` instead of shipping a placeholder in replay bundles
+- Decide whether AI-layer ingest should stay public in demos or be secured alongside classic ingest

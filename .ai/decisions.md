@@ -22,12 +22,12 @@ Decisions visible in the codebase. Read before changing anything they affect.
 
 ---
 
-## 3. create_all on startup, not Alembic (temporarily)
+## 3. create_all on startup, with Alembic now present
 
-**Files:** `apps/api/app/main.py:lifespan()`, `apps/api/alembic/` (dir exists, `versions/` empty)
-**Decision:** `Base.metadata.create_all()` on startup.
-**Why:** MVP speed. Safe for first deploy — idempotent on existing tables, creates new ones.
-**Tradeoff:** Cannot add columns to existing tables. Any schema change on a live DB requires manual `ALTER TABLE`. This is Priority 2 to fix — initialize Alembic before any schema change post-deploy.
+**Files:** `apps/api/app/main.py:lifespan()`, `apps/api/alembic/versions/0001_initial.py`, `apps/api/alembic/versions/0002_ai_layer.py`
+**Decision:** Runtime still uses `Base.metadata.create_all()` on startup, even though Alembic migrations now exist in the repo.
+**Why:** The project started in MVP mode and later added migration files without fully switching the operational boot path.
+**Tradeoff:** The repo has a migration history, but production discipline is still ambiguous until deploy/runbooks use `alembic upgrade head` explicitly. Priority 2 is now to switch workflow to migration-first, not to initialize Alembic from scratch.
 
 ---
 
